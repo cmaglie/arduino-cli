@@ -423,12 +423,15 @@ func (pm *PackageManager) InstalledBoards() []*cores.Board {
 	return boards
 }
 
-// FindToolsRequiredForBoard FIXMEDOC
-func (pm *PackageManager) FindToolsRequiredForBoard(board *cores.Board) ([]*cores.ToolRelease, error) {
-	pm.Log.Infof("Searching tools required for board %s", board)
-
-	// core := board.Properties["build.core"]
-	platform := board.PlatformRelease
+// FindToolsRequiredFromPlatformRelease returns all ToolReleases that the
+// specified PlatformRelease depends on.
+// In the result are included also all tools that comes from other platforms
+// (if not specified in the request PlatformRelease), because some platforms
+// may fail to specify all the dependecies in their package_index or
+// because a platform may not have a package_index at all if manually installed
+// from "user/hardware" directory.
+func (pm *PackageManager) FindToolsRequiredFromPlatformRelease(platform *cores.PlatformRelease) ([]*cores.ToolRelease, error) {
+	pm.Log.Infof("Searching tools required for platform %s", platform)
 
 	// maps "PACKAGER:TOOL" => ToolRelease
 	foundTools := map[string]*cores.ToolRelease{}
@@ -461,6 +464,16 @@ func (pm *PackageManager) FindToolsRequiredForBoard(board *cores.Board) ([]*core
 		requiredTools = append(requiredTools, toolRel)
 	}
 	return requiredTools, nil
+}
+
+// FindToolsRequiredForBoard FIXMEDOC
+func (pm *PackageManager) FindToolsRequiredForBoard(board *cores.Board) ([]*cores.ToolRelease, error) {
+	pm.Log.Infof("Searching tools required for board %s", board)
+
+	// core := board.Properties["build.core"]
+	platform := board.PlatformRelease
+
+	return pm.FindToolsRequiredFromPlatformRelease(platform)
 }
 
 // FindToolDependency returns the ToolRelease referenced by the ToolDependency or nil if
