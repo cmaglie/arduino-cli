@@ -41,6 +41,7 @@ func BurnBootloader(ctx context.Context, req *rpc.BurnBootloaderReq, outStream i
 		"",  // importDir
 		req.GetFqbn(),
 		req.GetPort(),
+		req.GetPortProtocol(),
 		req.GetProgrammer(),
 		req.GetVerbose(),
 		req.GetVerify(),

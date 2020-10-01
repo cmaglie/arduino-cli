@@ -33,6 +33,7 @@ import (
 var (
 	fqbn           string
 	port           string
+	portProtocol   string
 	verbose        bool
 	verify         bool
 	importDir      string
@@ -53,7 +54,8 @@ func NewCommand() *cobra.Command {
 
 	burnBootloaderCommand.Flags().StringVarP(&fqbn, "fqbn", "b", "", "Fully Qualified Board Name, e.g.: arduino:avr:uno")
 	burnBootloaderCommand.Flags().StringVarP(&port, "port", "p", "", "Upload port, e.g.: COM10 or /dev/ttyACM0")
-	burnBootloaderCommand.Flags().BoolVarP(&verify, "verify", "t", false, "Verify uploaded binary after the upload.")
+	burnBootloaderCommand.Flags().StringVarP(&portProtocol, "protocol", "t", "serial", "Upload port protocol.")
+	burnBootloaderCommand.Flags().BoolVarP(&verify, "verify", "V", false, "Verify uploaded binary after the upload.")
 	burnBootloaderCommand.Flags().BoolVarP(&verbose, "verbose", "v", false, "Turns on verbose mode.")
 	burnBootloaderCommand.Flags().StringVarP(&programmer, "programmer", "P", "", "Use the specified programmer to upload.")
 
@@ -68,12 +70,13 @@ func run(command *cobra.Command, args []string) {
 	}
 
 	if _, err := upload.BurnBootloader(context.Background(), &rpc.BurnBootloaderReq{
-		Instance:   instance,
-		Fqbn:       fqbn,
-		Port:       port,
-		Verbose:    verbose,
-		Verify:     verify,
-		Programmer: programmer,
+		Instance:     instance,
+		Fqbn:         fqbn,
+		Port:         port,
+		PortProtocol: portProtocol,
+		Verbose:      verbose,
+		Verify:       verify,
+		Programmer:   programmer,
 	}, os.Stdout, os.Stderr); err != nil {
 		feedback.Errorf("Error during Upload: %v", err)
 		os.Exit(errorcodes.ErrGeneric)

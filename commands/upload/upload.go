@@ -60,6 +60,7 @@ func Upload(ctx context.Context, req *rpc.UploadReq, outStream io.Writer, errStr
 		req.GetImportDir(),
 		req.GetFqbn(),
 		req.GetPort(),
+		req.GetPortProtocol(),
 		req.GetProgrammer(),
 		req.GetVerbose(),
 		req.GetVerify(),
@@ -96,7 +97,8 @@ func UsingProgrammer(ctx context.Context, req *rpc.UploadUsingProgrammerReq, out
 
 func runProgramAction(pm *packagemanager.PackageManager,
 	sketch *sketches.Sketch,
-	importFile, importDir, fqbnIn, port string,
+	importFile, importDir, fqbnIn,
+	port, portProtocol string,
 	programmerID string,
 	verbose, verify, burnBootloader bool,
 	outStream, errStream io.Writer) error {
@@ -162,6 +164,7 @@ func runProgramAction(pm *packagemanager.PackageManager,
 		} else if programmer != nil {
 			toolProperty = "program.tool"
 		}
+		toolProperty += "." + portProtocol
 
 		// create a temporary configuration only for the selection of upload tool
 		props := properties.NewMap()
@@ -172,6 +175,9 @@ func runProgramAction(pm *packagemanager.PackageManager,
 			props.Merge(programmer.Properties)
 		}
 		if t, ok := props.GetOk(toolProperty); ok {
+			uploadToolID = t
+		} else if t, ok := props.GetOk(strings.TrimSuffix(toolProperty, ".serial")); ok {
+			// Backward compatibility: default "upload.tool" for "serial" protocol
 			uploadToolID = t
 		} else {
 			return fmt.Errorf("cannot get programmer tool: undefined '%s' property", toolProperty)
@@ -329,12 +335,27 @@ func runProgramAction(pm *packagemanager.PackageManager,
 	}
 
 	if port != "" {
-		// Set serial port property
+		uploadProperties.Set("upload.address", actualPort)
+		uploadProperties.Set("upload.protocol", portProtocol)
+		fullPort := pm.GetDiscoveriesManager().FindPort(actualPort, portProtocol)
+		if len(fullPort) == 0 {
+			return errors.Errorf("port %s not found", port)
+		}
+		if len(fullPort) > 1 {
+			return errors.Errorf("ambiguous port %s", port)
+		}
+		for k, v := range fullPort[0].Properties.AsMap() {
+			uploadProperties.Set("upload.port."+k, v)
+		}
+
+		// Backward compatiblity: set serial port property
 		uploadProperties.Set("serial.port", actualPort)
-		if strings.HasPrefix(actualPort, "/dev/") {
-			uploadProperties.Set("serial.port.file", actualPort[5:])
-		} else {
-			uploadProperties.Set("serial.port.file", actualPort)
+		if portProtocol == "serial" || portProtocol == "" {
+			if strings.HasPrefix(actualPort, "/dev/") {
+				uploadProperties.Set("serial.port.file", actualPort[5:])
+			} else {
+				uploadProperties.Set("serial.port.file", actualPort)
+			}
 		}
 	}
 

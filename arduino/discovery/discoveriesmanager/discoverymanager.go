@@ -54,3 +54,20 @@ func (dm *DiscoveriesManager) ListPorts() ([]*discovery.Port, error) {
 	}
 	return res, nil
 }
+
+// FindPort search the port matching the request from the list of ports detected from all discoveries
+func (dm *DiscoveriesManager) FindPort(address, protocol string) []*discovery.Port {
+	res := []*discovery.Port{}
+	for _, disc := range dm.discoveries {
+		for _, port := range disc.ListSync() {
+			if port.Address != address {
+				continue
+			}
+			if protocol != "" && port.Protocol != protocol {
+				continue
+			}
+			res = append(res, port)
+		}
+	}
+	return res
+}
