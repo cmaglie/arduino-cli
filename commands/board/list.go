@@ -182,10 +182,13 @@ func List(instanceID int32) (r []*rpc.DetectedPort, e error) {
 		// boards slice can be empty at this point if neither the cores nor the
 		// API managed to recognize the connected board
 		p := &rpc.DetectedPort{
-			Address:       port.Address,
-			Protocol:      port.Protocol,
-			ProtocolLabel: port.ProtocolLabel,
-			Boards:        boards,
+			Address:                  port.Address,
+			AddressLabel:             port.AddressLabel,
+			Protocol:                 port.Protocol,
+			ProtocolLabel:            port.ProtocolLabel,
+			Properties:               port.Properties.AsMap(),
+			IdentificationProperties: port.IdentificationProperties.AsMap(),
+			Boards:                   boards,
 		}
 		retVal = append(retVal, p)
 	}

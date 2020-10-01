@@ -184,14 +184,20 @@ message BoardListResp {
 }
 
 message DetectedPort {
-    // Address of the port (e.g., `serial:///dev/ttyACM0`).
+    // Address of the port (e.g., `/dev/ttyACM0`).
     string address = 1;
+    // A human friendly description of the port (e.g. 'ttyACM0')
+    string address_label = 5;
     // Protocol of the port (e.g., `serial`).
     string protocol = 2;
     // A human friendly description of the protocol (e.g., "Serial Port (USB)").
     string protocol_label = 3;
     // The boards attached to the port.
     repeated BoardListItem boards = 4;
+    // The board port properties
+    map<string, string> properties = 6;
+    // The board model identification properties
+    map<string, string> identification_properties = 7;
 }
 
 message BoardListAllReq {
