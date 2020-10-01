@@ -41,7 +41,7 @@ func initListCommand() *cobra.Command {
 		Run:     runListCommand,
 	}
 
-	listCommand.Flags().StringVar(&listFlags.timeout, "timeout", "0s",
+	listCommand.Flags().StringVar(&listFlags.timeout, "timeout", "200ms",
 		"The connected devices search timeout, raise it if your board doesn't show up (e.g. to 10s).")
 	listCommand.Flags().BoolVarP(&listFlags.watch, "watch", "w", false,
 		"Command keeps running and prints list of connected boards whenever there is a change.")
@@ -66,11 +66,10 @@ func runListCommand(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}
 
-	if timeout, err := time.ParseDuration(listFlags.timeout); err != nil {
+	timeout, err := time.ParseDuration(listFlags.timeout)
+	if err != nil {
 		feedback.Errorf("Invalid timeout: %v", err)
 		os.Exit(errorcodes.ErrBadArgument)
-	} else {
-		time.Sleep(timeout)
 	}
 
 	inst, err := instance.CreateInstance()
@@ -78,6 +77,9 @@ func runListCommand(cmd *cobra.Command, args []string) {
 		feedback.Errorf("Error detecting boards: %v", err)
 		os.Exit(errorcodes.ErrGeneric)
 	}
+
+	// Give some time to discoveries to find boards
+	time.Sleep(timeout)
 
 	ports, err := board.List(inst.GetId())
 	if err != nil {
