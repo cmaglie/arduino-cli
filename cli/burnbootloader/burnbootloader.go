@@ -19,6 +19,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/arduino/arduino-cli/cli/args"
 	"github.com/arduino/arduino-cli/cli/errorcodes"
 	"github.com/arduino/arduino-cli/cli/feedback"
 	"github.com/arduino/arduino-cli/cli/instance"
@@ -32,8 +33,7 @@ import (
 
 var (
 	fqbn           string
-	port           string
-	portProtocol   string
+	portArgs       args.PortArguments
 	verbose        bool
 	verify         bool
 	importDir      string
@@ -53,8 +53,7 @@ func NewCommand() *cobra.Command {
 	}
 
 	burnBootloaderCommand.Flags().StringVarP(&fqbn, "fqbn", "b", "", "Fully Qualified Board Name, e.g.: arduino:avr:uno")
-	burnBootloaderCommand.Flags().StringVarP(&port, "port", "p", "", "Upload port, e.g.: COM10 or /dev/ttyACM0")
-	burnBootloaderCommand.Flags().StringVarP(&portProtocol, "protocol", "t", "serial", "Upload port protocol.")
+	portArgs.AddToCommand(burnBootloaderCommand)
 	burnBootloaderCommand.Flags().BoolVarP(&verify, "verify", "V", false, "Verify uploaded binary after the upload.")
 	burnBootloaderCommand.Flags().BoolVarP(&verbose, "verbose", "v", false, "Turns on verbose mode.")
 	burnBootloaderCommand.Flags().StringVarP(&programmer, "programmer", "P", "", "Use the specified programmer to upload.")
@@ -69,10 +68,11 @@ func run(command *cobra.Command, args []string) {
 		os.Exit(errorcodes.ErrGeneric)
 	}
 
+	portAddress, portProtocol := portArgs.GetAddressAndProtocol(instance)
 	if _, err := upload.BurnBootloader(context.Background(), &rpc.BurnBootloaderReq{
 		Instance:     instance,
 		Fqbn:         fqbn,
-		Port:         port,
+		Port:         portAddress,
 		PortProtocol: portProtocol,
 		Verbose:      verbose,
 		Verify:       verify,

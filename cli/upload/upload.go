@@ -20,6 +20,7 @@ import (
 	"os"
 
 	"github.com/arduino/arduino-cli/arduino/sketches"
+	"github.com/arduino/arduino-cli/cli/args"
 	"github.com/arduino/arduino-cli/cli/errorcodes"
 	"github.com/arduino/arduino-cli/cli/feedback"
 	"github.com/arduino/arduino-cli/cli/instance"
@@ -32,14 +33,13 @@ import (
 )
 
 var (
-	fqbn         string
-	port         string
-	portProtocol string
-	verbose      bool
-	verify       bool
-	importDir    string
-	importFile   string
-	programmer   string
+	fqbn       string
+	portArgs   args.PortArguments
+	verbose    bool
+	verify     bool
+	importDir  string
+	importFile string
+	programmer string
 )
 
 // NewCommand created a new `upload` command
@@ -55,8 +55,7 @@ func NewCommand() *cobra.Command {
 	}
 
 	uploadCommand.Flags().StringVarP(&fqbn, "fqbn", "b", "", "Fully Qualified Board Name, e.g.: arduino:avr:uno")
-	uploadCommand.Flags().StringVarP(&port, "port", "p", "", "Upload port, e.g.: COM10 or /dev/ttyACM0")
-	uploadCommand.Flags().StringVarP(&portProtocol, "protocol", "t", "serial", "Upload port protocol.")
+	portArgs.AddToCommand(uploadCommand)
 	uploadCommand.Flags().StringVarP(&importDir, "input-dir", "", "", "Directory containing binaries to upload.")
 	uploadCommand.Flags().StringVarP(&importFile, "input-file", "i", "", "Binary file to upload.")
 	uploadCommand.Flags().BoolVarP(&verify, "verify", "V", false, "Verify uploaded binary after the upload.")
@@ -94,11 +93,13 @@ func run(command *cobra.Command, args []string) {
 		}
 	}
 
+	portAddress, portProtocol := portArgs.GetAddressAndProtocol(instance)
+
 	if _, err := upload.Upload(context.Background(), &rpc.UploadReq{
 		Instance:     instance,
 		Fqbn:         fqbn,
 		SketchPath:   sketchPath.String(),
-		Port:         port,
+		Port:         portAddress,
 		PortProtocol: portProtocol,
 		Verbose:      verbose,
 		Verify:       verify,
