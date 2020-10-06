@@ -44,6 +44,11 @@ func (pm *PackageManager) IdentifyBoard(idProps *properties.Map) []*cores.Board 
 
 	foundBoards := []*cores.Board{}
 	for _, board := range pm.InstalledBoards() {
+		// Match board ID with the "." property. DEPRECATED: Added here for backward compatibility
+		if board.BoardID == idProps.Get(".") {
+			foundBoards = append(foundBoards, board)
+		}
+
 		if _, matched := checkSuffix(board.Properties, ""); matched {
 			foundBoards = append(foundBoards, board)
 			continue
