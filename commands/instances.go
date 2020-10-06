@@ -123,8 +123,15 @@ func (instance *CoreInstance) checkForBuiltinTools(downloadCB DownloadProgressCB
 		return err
 	}
 
-	// If ctags or serial-discovery have been just installed...
-	if ctagsInstalled || serialDiscoveryInstalled {
+	// Check for builtin mdns-discovery tool
+	mdnsDiscoveryTool := getBuiltinMdnsDiscoveryTool(instance.PackageManager)
+	mdnsDiscoveryInstalled, err := instance.installToolIfMissing(mdnsDiscoveryTool, downloadCB, taskCB)
+	if err != nil {
+		return err
+	}
+
+	// If any of the built-in tools have been just installed...
+	if ctagsInstalled || serialDiscoveryInstalled || mdnsDiscoveryInstalled {
 		// ...load them in the packagemanager
 		if err := instance.PackageManager.LoadHardware(); err != nil {
 			return fmt.Errorf("could not load hardware packages: %s", err)
@@ -137,6 +144,14 @@ func (instance *CoreInstance) checkForBuiltinTools(downloadCB DownloadProgressCB
 		return errors.WithMessage(err, "starting serial-discovery")
 	} else if err := instance.PackageManager.GetDiscoveriesManager().Add(serialDiscovery); err != nil {
 		return errors.WithMessage(err, "registering serial-discovery")
+	}
+
+	// Register the mdns discovery
+	if mdnsDiscovery, err := discovery.New(
+		"builtin:mdns-discovery", mdnsDiscoveryTool.InstallDir.Join("mdns-discovery").String()); err != nil {
+		return errors.WithMessage(err, "starting mdns-discovery")
+	} else if err := instance.PackageManager.GetDiscoveriesManager().Add(mdnsDiscovery); err != nil {
+		return errors.WithMessage(err, "registering mdns-discovery")
 	}
 
 	return nil
