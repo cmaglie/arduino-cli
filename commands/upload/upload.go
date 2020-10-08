@@ -22,10 +22,12 @@ import (
 	"net/url"
 	"path/filepath"
 	"strings"
+	"time"
 
 	bldr "github.com/arduino/arduino-cli/arduino/builder"
 	"github.com/arduino/arduino-cli/arduino/cores"
 	"github.com/arduino/arduino-cli/arduino/cores/packagemanager"
+	"github.com/arduino/arduino-cli/arduino/discovery"
 	"github.com/arduino/arduino-cli/arduino/globals"
 	"github.com/arduino/arduino-cli/arduino/serialutils"
 	"github.com/arduino/arduino-cli/arduino/sketches"
@@ -152,6 +154,33 @@ func runProgramAction(pm *packagemanager.PackageManager,
 		}
 		if programmer == nil {
 			return fmt.Errorf("programmer '%s' not available", programmerID)
+		}
+	}
+
+	// Find port metadata
+	var fullPort *discovery.Port
+	if port != "" {
+		timeout := time.Now().Add(5 * time.Second)
+		msg := "Waiting for upload port..."
+		for time.Now().Before(timeout) {
+			currentPorts := pm.GetDiscoveriesManager().FindPort(port, portProtocol)
+			if len(currentPorts) == 0 {
+				time.Sleep(100 * time.Millisecond)
+				outStream.Write([]byte(msg))
+				msg = "."
+				continue
+			}
+			if len(currentPorts) > 1 {
+				return errors.Errorf("ambiguous port %s", port)
+			}
+			fullPort = currentPorts[0]
+			break
+		}
+		if fullPort == nil {
+			return errors.Errorf("port %s not found", port)
+		}
+		if msg == "." {
+			outStream.Write([]byte(" done!\n"))
 		}
 	}
 
@@ -337,14 +366,7 @@ func runProgramAction(pm *packagemanager.PackageManager,
 	if port != "" {
 		uploadProperties.Set("upload.address", actualPort)
 		uploadProperties.Set("upload.protocol", portProtocol)
-		fullPort := pm.GetDiscoveriesManager().FindPort(actualPort, portProtocol)
-		if len(fullPort) == 0 {
-			return errors.Errorf("port %s not found", port)
-		}
-		if len(fullPort) > 1 {
-			return errors.Errorf("ambiguous port %s", port)
-		}
-		for k, v := range fullPort[0].Properties.AsMap() {
+		for k, v := range fullPort.Properties.AsMap() {
 			uploadProperties.Set("upload.port."+k, v)
 		}
 
