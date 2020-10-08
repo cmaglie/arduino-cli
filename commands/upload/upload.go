@@ -186,6 +186,7 @@ func runProgramAction(pm *packagemanager.PackageManager,
 
 	// Determine upload tool
 	var uploadToolID string
+	useLegacyNetworkPattern := false
 	{
 		toolProperty := "upload.tool"
 		if burnBootloader {
@@ -208,6 +209,11 @@ func runProgramAction(pm *packagemanager.PackageManager,
 		} else if t, ok := props.GetOk(strings.TrimSuffix(toolProperty, ".serial")); ok {
 			// Backward compatibility: default "upload.tool" for "serial" protocol
 			uploadToolID = t
+		} else if t, ok := props.GetOk(strings.TrimSuffix(toolProperty, ".network")); ok {
+			// Backward compatibility: default "upload.tool" for "network" protocol
+			uploadToolID = t
+			useLegacyNetworkPattern = true
+			logrus.Trace("Using legacy 'upload.network_pattern' logic")
 		} else {
 			return fmt.Errorf("cannot get programmer tool: undefined '%s' property", toolProperty)
 		}
@@ -394,6 +400,31 @@ func runProgramAction(pm *packagemanager.PackageManager,
 			return fmt.Errorf("programming error: %s", err)
 		}
 	} else {
+		// Backward compatibility: this is required for old OTA recipes
+		if useLegacyNetworkPattern {
+			if fullPort.Properties.Get("ssh_upload") == "no" {
+				// non-SSH upload
+				uploadProperties.Set("network.password", "password") // TODO: ask user to enter password
+				uploadProperties.Set("network.port", fullPort.Properties.Get("port"))
+
+				if uploadProperties.ContainsKey("upload.network_pattern") {
+					if err := runTool("upload.network_pattern", uploadProperties, outStream, errStream, verbose); err != nil {
+						return fmt.Errorf("uploading error: %s", err)
+					}
+				} else {
+					if err := runTool("upload.pattern", uploadProperties, outStream, errStream, verbose); err != nil {
+						return fmt.Errorf("uploading error: %s", err)
+					}
+				}
+			} else {
+				// SSH upload
+				return errors.New("uploading error: SSH upload not supported")
+			}
+
+			logrus.Tracef("Upload successful")
+			return nil
+		}
+
 		if err := runTool("upload.pattern", uploadProperties, outStream, errStream, verbose); err != nil {
 			return fmt.Errorf("uploading error: %s", err)
 		}
