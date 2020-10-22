@@ -21,7 +21,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/arduino/arduino-cli/commands"
+	"github.com/arduino/arduino-cli/arduino/discovery"
 	"github.com/arduino/arduino-cli/configuration"
 	"github.com/arduino/go-properties-orderedmap"
 	"github.com/stretchr/testify/require"
@@ -102,8 +102,8 @@ func TestGetByVidPidMalformedResponse(t *testing.T) {
 }
 
 func TestBoardDetectionViaAPIWithNonUSBPort(t *testing.T) {
-	port := &commands.BoardPort{
-		IdentificationPrefs: properties.NewMap(),
+	port := &discovery.Port{
+		IdentificationProperties: properties.NewMap(),
 	}
 	items, err := identifyViaCloudAPI(port)
 	require.Equal(t, err, ErrNotFound)

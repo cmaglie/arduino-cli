@@ -17,7 +17,6 @@ package commands
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/url"
@@ -28,6 +27,7 @@ import (
 	"github.com/arduino/arduino-cli/arduino/cores"
 	"github.com/arduino/arduino-cli/arduino/cores/packageindex"
 	"github.com/arduino/arduino-cli/arduino/cores/packagemanager"
+	"github.com/arduino/arduino-cli/arduino/discovery"
 	"github.com/arduino/arduino-cli/arduino/libraries"
 	"github.com/arduino/arduino-cli/arduino/libraries/librariesindex"
 	"github.com/arduino/arduino-cli/arduino/libraries/librariesmanager"
@@ -37,6 +37,7 @@ import (
 	"github.com/arduino/arduino-cli/configuration"
 	rpc "github.com/arduino/arduino-cli/rpc/commands"
 	paths "github.com/arduino/go-paths-helper"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"go.bug.st/downloader/v2"
 )
@@ -122,11 +123,22 @@ func (instance *CoreInstance) checkForBuiltinTools(downloadCB DownloadProgressCB
 		return err
 	}
 
+	// If ctags or serial-discovery have been just installed...
 	if ctagsInstalled || serialDiscoveryInstalled {
+		// ...load them in the packagemanager
 		if err := instance.PackageManager.LoadHardware(); err != nil {
 			return fmt.Errorf("could not load hardware packages: %s", err)
 		}
 	}
+
+	// Register the serial discovery
+	if serialDiscovery, err := discovery.New(
+		"builtin:serial-discovery", serialDiscoveryTool.InstallDir.Join("serial-discovery").String()); err != nil {
+		return errors.WithMessage(err, "starting serial-discovery")
+	} else if err := instance.PackageManager.GetDiscoveriesManager().Add(serialDiscovery); err != nil {
+		return errors.WithMessage(err, "registering serial-discovery")
+	}
+
 	return nil
 }
 
@@ -148,6 +160,10 @@ func Init(ctx context.Context, req *rpc.InitReq, downloadCB DownloadProgressCB, 
 
 	if err := instance.checkForBuiltinTools(downloadCB, taskCB); err != nil {
 		return nil, err
+	}
+
+	if err := instance.PackageManager.ExtractAllPluggableDiscoveries(); err != nil {
+		return nil, fmt.Errorf("could not start discoveries: %s", err)
 	}
 
 	return &rpc.InitResp{

@@ -24,6 +24,7 @@ import (
 
 	"github.com/arduino/arduino-cli/arduino/cores"
 	"github.com/arduino/arduino-cli/arduino/cores/packageindex"
+	"github.com/arduino/arduino-cli/arduino/discovery/discoveriesmanager"
 	paths "github.com/arduino/go-paths-helper"
 	properties "github.com/arduino/go-properties-orderedmap"
 	"github.com/sirupsen/logrus"
@@ -43,6 +44,7 @@ type PackageManager struct {
 	DownloadDir            *paths.Path
 	TempDir                *paths.Path
 	CustomGlobalProperties *properties.Map
+	discoveriesManager     *discoveriesmanager.DiscoveriesManager
 }
 
 // NewPackageManager returns a new instance of the PackageManager
@@ -55,6 +57,7 @@ func NewPackageManager(indexDir, packagesDir, downloadDir, tempDir *paths.Path) 
 		DownloadDir:            downloadDir,
 		TempDir:                tempDir,
 		CustomGlobalProperties: properties.NewMap(),
+		discoveriesManager:     discoveriesmanager.New(),
 	}
 }
 

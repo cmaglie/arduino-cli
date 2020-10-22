@@ -16,18 +16,12 @@
 package commands
 
 import (
-	"encoding/json"
 	"fmt"
-	"sync"
-	"time"
 
 	"github.com/arduino/arduino-cli/arduino/cores"
 	"github.com/arduino/arduino-cli/arduino/cores/packagemanager"
 	"github.com/arduino/arduino-cli/arduino/discovery"
 	"github.com/arduino/arduino-cli/arduino/resources"
-	"github.com/arduino/arduino-cli/executils"
-	"github.com/arduino/go-properties-orderedmap"
-	"github.com/pkg/errors"
 	semver "go.bug.st/relaxed-semver"
 )
 
@@ -106,104 +100,6 @@ var (
 		},
 	}
 )
-
-// BoardPort is a generic port descriptor
-type BoardPort struct {
-	Address             string          `json:"address"`
-	Label               string          `json:"label"`
-	Prefs               *properties.Map `json:"prefs"`
-	IdentificationPrefs *properties.Map `json:"identificationPrefs"`
-	Protocol            string          `json:"protocol"`
-	ProtocolLabel       string          `json:"protocolLabel"`
-}
-
-type eventJSON struct {
-	EventType string       `json:"eventType,required"`
-	Ports     []*BoardPort `json:"ports"`
-}
-
-var listBoardMutex sync.Mutex
-
-// ListBoards foo
-func ListBoards(pm *packagemanager.PackageManager) ([]*BoardPort, error) {
-	// ensure the connection to the discoverer is unique to avoid messing up
-	// the messages exchanged
-	listBoardMutex.Lock()
-	defer listBoardMutex.Unlock()
-
-	// get the bundled tool
-	t, err := getBuiltinSerialDiscoveryTool(pm)
-	if err != nil {
-		return nil, err
-	}
-
-	// determine if it's installed
-	if !t.IsInstalled() {
-		return nil, fmt.Errorf("missing serial-discovery tool")
-	}
-
-	// build the command to be executed
-	cmd, err := executils.NewProcessFromPath(t.InstallDir.Join("serial-discovery"))
-	if err != nil {
-		return nil, errors.Wrap(err, "creating discovery process")
-	}
-
-	// attach in/out pipes to the process
-	in, err := cmd.StdinPipe()
-	if err != nil {
-		return nil, fmt.Errorf("creating stdin pipe for discovery: %s", err)
-	}
-
-	out, err := cmd.StdoutPipe()
-	if err != nil {
-		return nil, fmt.Errorf("creating stdout pipe for discovery: %s", err)
-	}
-	outJSON := json.NewDecoder(out)
-
-	// start the process
-	if err := cmd.Start(); err != nil {
-		return nil, fmt.Errorf("starting discovery process: %s", err)
-	}
-
-	// send the LIST command
-	if _, err := in.Write([]byte("LIST\n")); err != nil {
-		return nil, fmt.Errorf("sending LIST command to discovery: %s", err)
-	}
-
-	// read the response from the pipe
-	decodeResult := make(chan error)
-	var event eventJSON
-	go func() {
-		decodeResult <- outJSON.Decode(&event)
-	}()
-
-	var finalError error
-	var retVal []*BoardPort
-
-	// wait for the response
-	select {
-	case err := <-decodeResult:
-		if err == nil {
-			retVal = event.Ports
-		} else {
-			finalError = err
-		}
-	case <-time.After(10 * time.Second):
-		finalError = fmt.Errorf("decoding LIST command: timeout")
-	}
-
-	// tell the process to quit
-	in.Write([]byte("QUIT\n"))
-	in.Close()
-	out.Close()
-	// kill the process if it takes too long to quit
-	time.AfterFunc(time.Second, func() {
-		cmd.Kill()
-	})
-	cmd.Wait()
-
-	return retVal, finalError
-}
 
 // WatchListBoards returns a channel that receives events from the bundled discovery tool
 func WatchListBoards(pm *packagemanager.PackageManager) (<-chan *discovery.Event, error) {

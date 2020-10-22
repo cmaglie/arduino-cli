@@ -24,6 +24,7 @@ import (
 	"sync"
 
 	"github.com/arduino/arduino-cli/arduino/cores/packagemanager"
+	"github.com/arduino/arduino-cli/arduino/discovery"
 	"github.com/arduino/arduino-cli/commands"
 	"github.com/arduino/arduino-cli/httpclient"
 	rpc "github.com/arduino/arduino-cli/rpc/commands"
@@ -99,9 +100,9 @@ func apiByVidPid(vid, pid string) ([]*rpc.BoardListItem, error) {
 	return retVal, nil
 }
 
-func identifyViaCloudAPI(port *commands.BoardPort) ([]*rpc.BoardListItem, error) {
+func identifyViaCloudAPI(port *discovery.Port) ([]*rpc.BoardListItem, error) {
 	// If the port is not USB do not try identification via cloud
-	id := port.IdentificationPrefs
+	id := port.IdentificationProperties
 	if !id.ContainsKey("vid") || !id.ContainsKey("pid") {
 		return nil, ErrNotFound
 	}
@@ -111,17 +112,17 @@ func identifyViaCloudAPI(port *commands.BoardPort) ([]*rpc.BoardListItem, error)
 }
 
 // identify returns a list of boards checking first the installed platforms or the Cloud API
-func identify(pm *packagemanager.PackageManager, port *commands.BoardPort) ([]*rpc.BoardListItem, error) {
+func identify(pm *packagemanager.PackageManager, port *discovery.Port) ([]*rpc.BoardListItem, error) {
 	boards := []*rpc.BoardListItem{}
 
 	// first query installed cores through the Package Manager
 	logrus.Debug("Querying installed cores for board identification...")
-	for _, board := range pm.IdentifyBoard(port.IdentificationPrefs) {
+	for _, board := range pm.IdentifyBoard(port.IdentificationProperties) {
 		boards = append(boards, &rpc.BoardListItem{
 			Name: board.Name(),
 			FQBN: board.FQBN(),
-			VID:  port.IdentificationPrefs.Get("vid"),
-			PID:  port.IdentificationPrefs.Get("pid"),
+			VID:  port.IdentificationProperties.Get("vid"),
+			PID:  port.IdentificationProperties.Get("pid"),
 		})
 	}
 
@@ -166,9 +167,9 @@ func List(instanceID int32) (r []*rpc.DetectedPort, e error) {
 		return nil, errors.New("invalid instance")
 	}
 
-	ports, err := commands.ListBoards(pm)
+	ports, err := pm.GetDiscoveriesManager().ListPorts()
 	if err != nil {
-		return nil, errors.Wrap(err, "error getting port list from serial-discovery")
+		return nil, errors.Wrap(err, "error getting port list from discoveries")
 	}
 
 	retVal := []*rpc.DetectedPort{}
@@ -209,14 +210,7 @@ func Watch(instanceID int32, interrupt <-chan bool) (<-chan *rpc.BoardListWatchR
 				boards := []*rpc.BoardListItem{}
 				boardsError := ""
 				if event.Type == "add" {
-					boards, err = identify(pm, &commands.BoardPort{
-						Address:             event.Port.Address,
-						Label:               event.Port.AddressLabel,
-						Prefs:               event.Port.Properties,
-						IdentificationPrefs: event.Port.IdentificationProperties,
-						Protocol:            event.Port.Protocol,
-						ProtocolLabel:       event.Port.ProtocolLabel,
-					})
+					boards, err = identify(pm, event.Port)
 					if err != nil {
 						boardsError = err.Error()
 					}
