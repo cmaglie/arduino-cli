@@ -99,15 +99,11 @@ func UsingProgrammer(ctx context.Context, req *rpc.UploadUsingProgrammerReq, out
 
 func runProgramAction(pm *packagemanager.PackageManager,
 	sketch *sketches.Sketch,
-	importFile, importDir, fqbnIn,
+	importFile, importDir, fqbnIn string,
 	port, portProtocol string,
 	programmerID string,
 	verbose, verify, burnBootloader bool,
 	outStream, errStream io.Writer) error {
-
-	if burnBootloader && programmerID == "" {
-		return fmt.Errorf("no programmer specified for burning bootloader")
-	}
 
 	// FIXME: make a specification on how a port is specified via command line
 	if port == "" && sketch != nil && sketch.Metadata != nil {
@@ -120,6 +116,54 @@ func runProgramAction(pm *packagemanager.PackageManager,
 		}
 	}
 	logrus.WithField("port", port).Tracef("Upload port")
+
+	// Find port metadata
+	var fullPort *discovery.Port
+	if port != "" {
+		timeout := time.Now().Add(5 * time.Second)
+		msg := "Waiting for upload port..."
+		for time.Now().Before(timeout) {
+			currentPorts := pm.GetDiscoveriesManager().FindPort(port, portProtocol)
+			if len(currentPorts) == 0 {
+				time.Sleep(100 * time.Millisecond)
+				outStream.Write([]byte(msg))
+				msg = "."
+				continue
+			}
+			if len(currentPorts) > 1 {
+				return errors.Errorf("ambiguous port %s", port)
+			}
+			fullPort = currentPorts[0]
+			break
+		}
+		if fullPort == nil {
+			return errors.Errorf("port %s not found", port)
+		}
+		if msg == "." {
+			outStream.Write([]byte(" done!\n"))
+		}
+	}
+
+	return realProgramAction(pm,
+		sketch,
+		importFile, importDir, fqbnIn,
+		fullPort,
+		programmerID,
+		verbose, verify, burnBootloader,
+		outStream, errStream)
+}
+
+func realProgramAction(pm *packagemanager.PackageManager,
+	sketch *sketches.Sketch,
+	importFile, importDir, fqbnIn string,
+	fullPort *discovery.Port,
+	programmerID string,
+	verbose, verify, burnBootloader bool,
+	outStream, errStream io.Writer) error {
+
+	if burnBootloader && programmerID == "" {
+		return fmt.Errorf("no programmer specified for burning bootloader")
+	}
 
 	if fqbnIn == "" && sketch != nil && sketch.Metadata != nil {
 		fqbnIn = sketch.Metadata.CPU.Fqbn
@@ -157,45 +201,16 @@ func runProgramAction(pm *packagemanager.PackageManager,
 		}
 	}
 
-	// Find port metadata
-	var fullPort *discovery.Port
-	if port != "" {
-		timeout := time.Now().Add(5 * time.Second)
-		msg := "Waiting for upload port..."
-		for time.Now().Before(timeout) {
-			currentPorts := pm.GetDiscoveriesManager().FindPort(port, portProtocol)
-			if len(currentPorts) == 0 {
-				time.Sleep(100 * time.Millisecond)
-				outStream.Write([]byte(msg))
-				msg = "."
-				continue
-			}
-			if len(currentPorts) > 1 {
-				return errors.Errorf("ambiguous port %s", port)
-			}
-			fullPort = currentPorts[0]
-			break
-		}
-		if fullPort == nil {
-			return errors.Errorf("port %s not found", port)
-		}
-		if msg == "." {
-			outStream.Write([]byte(" done!\n"))
-		}
+	// Backward compatibility: assume serial if protocol is not specified
+	portProtocol := "serial"
+	if fullPort != nil {
+		portProtocol = fullPort.Protocol
 	}
 
 	// Determine upload tool
 	var uploadToolID string
 	useLegacyNetworkPattern := false
 	{
-		toolProperty := "upload.tool"
-		if burnBootloader {
-			toolProperty = "bootloader.tool"
-		} else if programmer != nil {
-			toolProperty = "program.tool"
-		}
-		toolProperty += "." + portProtocol
-
 		// create a temporary configuration only for the selection of upload tool
 		props := properties.NewMap()
 		props.Merge(boardPlatform.Properties)
@@ -204,16 +219,26 @@ func runProgramAction(pm *packagemanager.PackageManager,
 		if programmer != nil {
 			props.Merge(programmer.Properties)
 		}
-		if t, ok := props.GetOk(toolProperty); ok {
+
+		toolProperty := "upload.tool"
+		if burnBootloader {
+			toolProperty = "bootloader.tool"
+		} else if programmer != nil {
+			toolProperty = "program.tool"
+		}
+
+		if t, ok := props.GetOk(toolProperty + "." + portProtocol); ok {
 			uploadToolID = t
-		} else if t, ok := props.GetOk(strings.TrimSuffix(toolProperty, ".serial")); ok {
+		} else if t, ok := props.GetOk(toolProperty); ok && portProtocol == "serial" {
 			// Backward compatibility: default "upload.tool" for "serial" protocol
 			uploadToolID = t
-		} else if t, ok := props.GetOk(strings.TrimSuffix(toolProperty, ".network")); ok {
-			// Backward compatibility: default "upload.tool" for "network" protocol
+			logrus.Trace("Using legacy serial 'upload.patter' recipe")
+		} else if t, ok := props.GetOk(toolProperty); ok && portProtocol == "network" {
+			// Backward compatibility: default "upload.tool" for "network" protocol; see
+			// below, the "tool.<uploadToolID>.upload.network_pattern" recipe will be used
 			uploadToolID = t
 			useLegacyNetworkPattern = true
-			logrus.Trace("Using legacy 'upload.network_pattern' logic")
+			logrus.Trace("Using legacy network 'upload.network_pattern' recipe")
 		} else {
 			return fmt.Errorf("cannot get programmer tool: undefined '%s' property", toolProperty)
 		}
@@ -328,25 +353,25 @@ func runProgramAction(pm *packagemanager.PackageManager,
 
 	// If not using programmer perform some action required
 	// to set the board in bootloader mode
-	actualPort := port
+	newAddress := ""
 	if programmer == nil && !burnBootloader && portProtocol == "serial" {
+		if fullPort == nil {
+			return fmt.Errorf("no upload port provided")
+		}
+
 		// Perform reset via 1200bps touch if requested
 		if uploadProperties.GetBoolean("upload.use_1200bps_touch") {
-			if port == "" {
-				return fmt.Errorf("no upload port provided")
-			}
-
 			ports, err := serial.GetPortsList()
 			if err != nil {
 				return fmt.Errorf("cannot get serial port list: %s", err)
 			}
 			for _, p := range ports {
-				if p == port {
+				if p == fullPort.Address {
 					if verbose {
 						outStream.Write([]byte(fmt.Sprintf("Performing 1200-bps touch reset on serial port %s", p)))
 						outStream.Write([]byte(fmt.Sprintln()))
 					}
-					logrus.Infof("Touching port %s at 1200bps", port)
+					logrus.Infof("Touching port %s at 1200bps", p)
 					if err := serialutils.TouchSerialPortAt1200bps(p); err != nil {
 						outStream.Write([]byte(fmt.Sprintf("Cannot perform port reset: %s", err)))
 						outStream.Write([]byte(fmt.Sprintln()))
@@ -362,27 +387,29 @@ func runProgramAction(pm *packagemanager.PackageManager,
 				outStream.Write([]byte(fmt.Sprintln("Waiting for upload port...")))
 			}
 
-			actualPort, err = serialutils.WaitForNewSerialPortOrDefaultTo(actualPort)
+			newAddress, err = serialutils.WaitForNewSerialPortOrDefaultTo(fullPort.Address)
 			if err != nil {
 				return errors.WithMessage(err, "detecting serial port")
 			}
+		} else {
+			newAddress = fullPort.Address
 		}
 	}
 
-	if port != "" {
-		uploadProperties.Set("upload.address", actualPort)
+	if fullPort != nil {
+		uploadProperties.Set("upload.address", newAddress)
 		uploadProperties.Set("upload.protocol", portProtocol)
 		for k, v := range fullPort.Properties.AsMap() {
 			uploadProperties.Set("upload.port."+k, v)
 		}
 
 		// Backward compatiblity: set serial port property
-		uploadProperties.Set("serial.port", actualPort)
-		if portProtocol == "serial" || portProtocol == "" {
-			if strings.HasPrefix(actualPort, "/dev/") {
-				uploadProperties.Set("serial.port.file", actualPort[5:])
+		uploadProperties.Set("serial.port", newAddress)
+		if portProtocol == "serial" {
+			if strings.HasPrefix(newAddress, "/dev/") {
+				uploadProperties.Set("serial.port.file", newAddress[5:])
 			} else {
-				uploadProperties.Set("serial.port.file", actualPort)
+				uploadProperties.Set("serial.port.file", newAddress)
 			}
 		}
 	}

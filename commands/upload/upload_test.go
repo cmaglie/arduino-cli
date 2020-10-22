@@ -24,6 +24,7 @@ import (
 	"github.com/arduino/arduino-cli/arduino/builder"
 	"github.com/arduino/arduino-cli/arduino/cores"
 	"github.com/arduino/arduino-cli/arduino/cores/packagemanager"
+	"github.com/arduino/arduino-cli/arduino/discovery"
 	"github.com/arduino/arduino-cli/arduino/sketches"
 	paths "github.com/arduino/go-paths-helper"
 	"github.com/sirupsen/logrus"
@@ -179,14 +180,17 @@ func TestUploadPropertiesComposition(t *testing.T) {
 	testRunner := func(t *testing.T, test test, verboseVerify bool) {
 		outStream := &bytes.Buffer{}
 		errStream := &bytes.Buffer{}
-		err := runProgramAction(
+		port := &discovery.Port{
+			Address:  test.port,
+			Protocol: test.portProtocol,
+		}
+		err := realProgramAction(
 			pm,
 			nil,                     // sketch
 			"",                      // importFile
 			test.importDir.String(), // importDir
 			test.fqbn,               // FQBN
-			test.port,               // port
-			test.portProtocol,       // port protocol
+			port,                    // Port
 			test.programmer,         // programmer
 			verboseVerify,           // verbose
 			verboseVerify,           // verify
