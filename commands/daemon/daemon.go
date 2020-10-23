@@ -42,14 +42,14 @@ func (s *ArduinoCoreServerImpl) BoardDetails(ctx context.Context, req *rpc.Board
 	return board.Details(ctx, req)
 }
 
-// BoardList FIXMEDOC
-func (s *ArduinoCoreServerImpl) BoardList(ctx context.Context, req *rpc.BoardListReq) (*rpc.BoardListResp, error) {
+// PortList FIXMEDOC
+func (s *ArduinoCoreServerImpl) PortList(ctx context.Context, req *rpc.PortListReq) (*rpc.PortListResp, error) {
 	ports, err := board.List(req.GetInstance().GetId())
 	if err != nil {
 		return nil, err
 	}
 
-	return &rpc.BoardListResp{
+	return &rpc.PortListResp{
 		Ports: ports,
 	}, nil
 }

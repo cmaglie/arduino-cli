@@ -147,7 +147,7 @@ func identify(pm *packagemanager.PackageManager, port *discovery.Port) ([]*rpc.B
 }
 
 // List FIXMEDOC
-func List(instanceID int32) (r []*rpc.DetectedPort, e error) {
+func List(instanceID int32) (r []*rpc.PortListItem, e error) {
 	m.Lock()
 	defer m.Unlock()
 
@@ -172,7 +172,7 @@ func List(instanceID int32) (r []*rpc.DetectedPort, e error) {
 		return nil, errors.Wrap(err, "error getting port list from discoveries")
 	}
 
-	retVal := []*rpc.DetectedPort{}
+	retVal := []*rpc.PortListItem{}
 	for _, port := range ports {
 		boards, err := identify(pm, port)
 		if err != nil {
@@ -181,16 +181,10 @@ func List(instanceID int32) (r []*rpc.DetectedPort, e error) {
 
 		// boards slice can be empty at this point if neither the cores nor the
 		// API managed to recognize the connected board
-		p := &rpc.DetectedPort{
-			Address:                  port.Address,
-			AddressLabel:             port.AddressLabel,
-			Protocol:                 port.Protocol,
-			ProtocolLabel:            port.ProtocolLabel,
-			Properties:               port.Properties.AsMap(),
-			IdentificationProperties: port.IdentificationProperties.AsMap(),
-			Boards:                   boards,
-		}
-		retVal = append(retVal, p)
+		retVal = append(retVal, &rpc.PortListItem{
+			Port:   port.ToRPCPort(),
+			Boards: boards,
+		})
 	}
 
 	return retVal, nil
@@ -221,11 +215,9 @@ func Watch(instanceID int32, interrupt <-chan bool) (<-chan *rpc.BoardListWatchR
 
 				outChan <- &rpc.BoardListWatchResp{
 					EventType: event.Type,
-					Port: &rpc.DetectedPort{
-						Address:       event.Port.Address,
-						Protocol:      event.Port.Protocol,
-						ProtocolLabel: event.Port.ProtocolLabel,
-						Boards:        boards,
+					Port: &rpc.PortListItem{
+						Port:   event.Port.ToRPCPort(),
+						Boards: boards,
 					},
 					Error: boardsError,
 				}

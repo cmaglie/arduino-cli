@@ -107,9 +107,9 @@ func watchList(cmd *cobra.Command, inst *rpc.Instance) {
 	for event := range eventsChan {
 		feedback.PrintResult(watchEvent{
 			Type:          event.EventType,
-			Address:       event.Port.Address,
-			Protocol:      event.Port.Protocol,
-			ProtocolLabel: event.Port.ProtocolLabel,
+			Address:       event.Port.Port.Address,
+			Protocol:      event.Port.Port.Protocol,
+			ProtocolLabel: event.Port.Port.ProtocolLabel,
 			Boards:        event.Port.Boards,
 			Error:         event.Error,
 		})
@@ -119,31 +119,32 @@ func watchList(cmd *cobra.Command, inst *rpc.Instance) {
 // output from this command requires special formatting, let's create a dedicated
 // feedback.Result implementation
 type result struct {
-	ports []*rpc.DetectedPort
+	items []*rpc.PortListItem
 }
 
 func (dr result) Data() interface{} {
-	return dr.ports
+	return dr.items
 }
 
 func (dr result) String() string {
-	if len(dr.ports) == 0 {
+	if len(dr.items) == 0 {
 		return "No boards found."
 	}
 
-	sort.Slice(dr.ports, func(i, j int) bool {
-		x, y := dr.ports[i], dr.ports[j]
+	sort.Slice(dr.items, func(i, j int) bool {
+		x, y := dr.items[i].GetPort(), dr.items[j].GetPort()
 		return x.GetProtocol() < y.GetProtocol() ||
 			(x.GetProtocol() == y.GetProtocol() && x.GetAddress() < y.GetAddress())
 	})
 
 	t := table.New()
 	t.SetHeader("Address", "Protocol", "Type", "Board Name", "FQBN", "Core")
-	for _, port := range dr.ports {
+	for _, item := range dr.items {
+		port := item.GetPort()
 		address := port.GetAddress()
 		protocol := port.GetProtocol()
 		protocolLabel := port.GetProtocolLabel()
-		if boards := port.GetBoards(); len(boards) > 0 {
+		if boards := item.GetBoards(); len(boards) > 0 {
 			sort.Slice(boards, func(i, j int) bool {
 				x, y := boards[i], boards[j]
 				return x.GetName() < y.GetName() || (x.GetName() == y.GetName() && x.GetFQBN() < y.GetFQBN())

@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/arduino/arduino-cli/executils"
+	rpc "github.com/arduino/arduino-cli/rpc/commands"
 	"github.com/arduino/go-properties-orderedmap"
 	"github.com/pkg/errors"
 )
@@ -66,6 +67,37 @@ func (p *Port) String() string {
 		return "none"
 	}
 	return p.Address
+}
+
+// ToRPCPort converts this discovery.Port to an rpc.Port
+func (p *Port) ToRPCPort() *rpc.Port {
+	var props, idProps map[string]string
+	if p.Properties != nil {
+		props = p.Properties.AsMap()
+	}
+	if p.IdentificationProperties != nil {
+		idProps = p.IdentificationProperties.AsMap()
+	}
+	return &rpc.Port{
+		Address:                  p.Address,
+		AddressLabel:             p.AddressLabel,
+		Protocol:                 p.Protocol,
+		ProtocolLabel:            p.ProtocolLabel,
+		Properties:               props,
+		IdentificationProperties: idProps,
+	}
+}
+
+// NewPortFromRPCPort converts an rpc.Port to a discovery.Port
+func NewPortFromRPCPort(p *rpc.Port) *Port {
+	return &Port{
+		Address:                  p.Address,
+		AddressLabel:             p.AddressLabel,
+		Protocol:                 p.Protocol,
+		ProtocolLabel:            p.ProtocolLabel,
+		Properties:               properties.NewFromHashmap(p.Properties),
+		IdentificationProperties: properties.NewFromHashmap(p.IdentificationProperties),
+	}
 }
 
 // Event is a pluggable discovery event

@@ -54,11 +54,12 @@ func (args *PortArguments) GetAddressAndProtocol(instance *rpc.Instance) (string
 	// - if the port address match only one of the available ports use the protocol of the matching port
 	// - if the port address match more than one port exit with an error
 	// - in all other cases assume "serial"
-	ports, err := board.List(instance.GetId())
+	portItems, err := board.List(instance.GetId())
 	if err != nil {
 		feedback.Errorf("Error getting port list: %v", err)
 	} else {
-		for _, port := range ports {
+		for _, item := range portItems {
+			port := item.GetPort()
 			if port.Address != args.address {
 				continue
 			}
