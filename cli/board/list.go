@@ -123,7 +123,30 @@ type result struct {
 }
 
 func (dr result) Data() interface{} {
-	return dr.items
+	// Backward compatiblity: the Port fields must be at the top
+	// level together with the Boards array.
+	type resItem struct {
+		Address                  string
+		AddressLabel             string
+		Protocol                 string
+		ProtocolLabel            string
+		Properties               map[string]string
+		IdentificationProperties map[string]string
+		Boards                   []*rpc.BoardListItem
+	}
+	r := []*resItem{}
+	for _, i := range dr.items {
+		r = append(r, &resItem{
+			Address:                  i.Port.GetAddress(),
+			AddressLabel:             i.Port.GetAddressLabel(),
+			Protocol:                 i.Port.GetProtocol(),
+			ProtocolLabel:            i.Port.GetProtocolLabel(),
+			Properties:               i.Port.GetProperties(),
+			IdentificationProperties: i.Port.GetIdentificationProperties(),
+			Boards:                   i.GetBoards(),
+		})
+	}
+	return r
 }
 
 func (dr result) String() string {
