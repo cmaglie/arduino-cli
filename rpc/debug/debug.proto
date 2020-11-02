@@ -60,8 +60,6 @@ message DebugConfigReq {
     // Path to the sketch that is running on the board. The compiled executable
     // is expected to be located under this path.
     string sketch_path = 3;
-    // Port of the debugger (optional).
-    string port = 4;
     // Which GDB command interpreter to use.
     string interpreter = 5;
     // Directory containing the compiled executable. If `import_dir` is not
@@ -70,6 +68,8 @@ message DebugConfigReq {
     string import_dir = 8;
     // The programmer to use for debugging.
     string programmer = 9;
+    // Port of the debugger.
+    cc.arduino.cli.commands.Port port = 10;
 }
 
 //

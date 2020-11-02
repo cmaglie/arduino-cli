@@ -22,10 +22,13 @@ import (
 	"os/signal"
 	"sort"
 
+	"github.com/arduino/arduino-cli/arduino/sketches"
+	"github.com/arduino/arduino-cli/cli/args"
 	"github.com/arduino/arduino-cli/cli/errorcodes"
 	"github.com/arduino/arduino-cli/cli/feedback"
 	"github.com/arduino/arduino-cli/cli/instance"
 	"github.com/arduino/arduino-cli/commands/debug"
+	rpc "github.com/arduino/arduino-cli/rpc/commands"
 	dbg "github.com/arduino/arduino-cli/rpc/debug"
 	"github.com/arduino/arduino-cli/table"
 	"github.com/arduino/go-paths-helper"
@@ -38,7 +41,7 @@ import (
 
 var (
 	fqbn        string
-	port        string
+	portArgs    args.PortArguments
 	verbose     bool
 	verify      bool
 	interpreter string
@@ -59,8 +62,8 @@ func NewCommand() *cobra.Command {
 	}
 
 	debugCommand.Flags().StringVarP(&fqbn, "fqbn", "b", "", "Fully Qualified Board Name, e.g.: arduino:avr:uno")
-	debugCommand.Flags().StringVarP(&port, "port", "p", "", "Debug port, e.g.: COM10 or /dev/ttyACM0")
 	debugCommand.Flags().StringVarP(&programmer, "programmer", "P", "", "Programmer to use for debugging")
+	portArgs.AddToCommand(debugCommand)
 	debugCommand.Flags().StringVar(&interpreter, "interpreter", "console", "Debug interpreter e.g.: console, mi, mi1, mi2, mi3")
 	debugCommand.Flags().StringVarP(&importDir, "input-dir", "", "", "Directory containing binaries for debug.")
 	debugCommand.Flags().BoolVarP(&printInfo, "info", "I", false, "Show metadata about the debug session instead of starting the debugger.")
@@ -75,17 +78,28 @@ func run(command *cobra.Command, args []string) {
 		os.Exit(errorcodes.ErrGeneric)
 	}
 
+	// XXX: FIXME remove this code duplication
 	var path *paths.Path
 	if len(args) > 0 {
 		path = paths.New(args[0])
 	}
 	sketchPath := initSketchPath(path)
 
+	var rpcPort *rpc.Port
+	if sketch, err := sketches.NewSketchFromPath(sketchPath); err != nil {
+		feedback.Errorf("Error opening sketch: %v", err)
+		os.Exit(errorcodes.ErrGeneric)
+	} else if port, err := portArgs.GetPort(instance, sketch); err != nil {
+		feedback.Errorf("Error during Debug: %v", err)
+		os.Exit(errorcodes.ErrGeneric)
+	} else {
+		rpcPort = port.ToRPCPort()
+	}
 	debugConfigRequested := &dbg.DebugConfigReq{
 		Instance:    instance,
 		Fqbn:        fqbn,
 		SketchPath:  sketchPath.String(),
-		Port:        port,
+		Port:        rpcPort,
 		Interpreter: interpreter,
 		ImportDir:   importDir,
 		Programmer:  programmer,
@@ -118,6 +132,7 @@ func run(command *cobra.Command, args []string) {
 	}
 }
 
+// XXX: Remove this DUPLICATION!!
 // initSketchPath returns the current working directory
 func initSketchPath(sketchPath *paths.Path) *paths.Path {
 	if sketchPath != nil {

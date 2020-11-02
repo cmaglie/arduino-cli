@@ -32,10 +32,8 @@ message UploadReq {
 	// field is defined, the compiled binary is assumed to be at the location and
 	// filename under this path where it is saved by the `Compile` method.
 	string sketch_path = 3;
-	// The port address of the board.
-	string port = 4;
-	// The port protocol.
-	string port_protocol = 10;
+	// The port of the board to use for upload.
+	Port port = 11;
 	// Whether to turn on verbose output during the upload.
 	bool verbose = 5;
 	// After upload, verify that the contents of the memory on the board match the
@@ -71,8 +69,8 @@ message UploadUsingProgrammerReq {
 	// field is defined, the compiled binary is assumed to be at the location and
 	// filename under this path where it is saved by the `Compile` method.
 	string sketch_path = 3;
-	// The port of the board.
-	string port = 4;
+	// The port of the programmer to use for upload.
+	Port port = 10;
 	// Whether to turn on verbose output during the upload.
 	bool verbose = 5;
 	// After upload, verify that the contents of the memory on the board match the
@@ -100,10 +98,8 @@ message BurnBootloaderReq {
 	Instance instance = 1;
 	// Fully qualified board name of the target board (e.g., `arduino:avr:uno`).
 	string fqbn = 2;
-	// The port address of the programmer used to program the bootloader.
-	string port = 3;
-	// The port protocol.
-	string port_protocol = 7;
+	// The port of the programmer to use to program the bootloader.
+	Port port = 8;
 	// Whether to turn on verbose output during the programming.
 	bool verbose = 4;
 	// After programming, verify the contents of the memory on the board match the

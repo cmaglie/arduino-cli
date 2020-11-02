@@ -19,10 +19,8 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"net/url"
 	"path/filepath"
 	"strings"
-	"time"
 
 	bldr "github.com/arduino/arduino-cli/arduino/builder"
 	"github.com/arduino/arduino-cli/arduino/cores"
@@ -55,14 +53,13 @@ func Upload(ctx context.Context, req *rpc.UploadReq, outStream io.Writer, errStr
 
 	pm := commands.GetPackageManager(req.GetInstance().GetId())
 
-	err = runProgramAction(
+	err = realProgramAction(
 		pm,
 		sketch,
 		req.GetImportFile(),
 		req.GetImportDir(),
 		req.GetFqbn(),
-		req.GetPort(),
-		req.GetPortProtocol(),
+		discovery.NewPortFromRPCPort(req.GetPort()),
 		req.GetProgrammer(),
 		req.GetVerbose(),
 		req.GetVerify(),
@@ -83,6 +80,7 @@ func UsingProgrammer(ctx context.Context, req *rpc.UploadUsingProgrammerReq, out
 	if req.GetProgrammer() == "" {
 		return nil, errors.New("programmer not specified")
 	}
+
 	_, err := Upload(ctx, &rpc.UploadReq{
 		Instance:   req.GetInstance(),
 		SketchPath: req.GetSketchPath(),
@@ -95,62 +93,6 @@ func UsingProgrammer(ctx context.Context, req *rpc.UploadUsingProgrammerReq, out
 		Verify:     req.GetVerify(),
 	}, outStream, errStream)
 	return &rpc.UploadUsingProgrammerResp{}, err
-}
-
-func runProgramAction(pm *packagemanager.PackageManager,
-	sketch *sketches.Sketch,
-	importFile, importDir, fqbnIn string,
-	port, portProtocol string,
-	programmerID string,
-	verbose, verify, burnBootloader bool,
-	outStream, errStream io.Writer) error {
-
-	// FIXME: make a specification on how a port is specified via command line
-	if port == "" && sketch != nil && sketch.Metadata != nil {
-		deviceURI, err := url.Parse(sketch.Metadata.CPU.Port)
-		if err != nil {
-			return fmt.Errorf("invalid Device URL format: %s", err)
-		}
-		if deviceURI.Scheme == "serial" {
-			port = deviceURI.Host + deviceURI.Path
-		}
-	}
-	logrus.WithField("port", port).Tracef("Upload port")
-
-	// Find port metadata
-	var fullPort *discovery.Port
-	if port != "" {
-		timeout := time.Now().Add(5 * time.Second)
-		msg := "Waiting for upload port..."
-		for time.Now().Before(timeout) {
-			currentPorts := pm.GetDiscoveriesManager().FindPort(port, portProtocol)
-			if len(currentPorts) == 0 {
-				time.Sleep(100 * time.Millisecond)
-				outStream.Write([]byte(msg))
-				msg = "."
-				continue
-			}
-			if len(currentPorts) > 1 {
-				return errors.Errorf("ambiguous port %s", port)
-			}
-			fullPort = currentPorts[0]
-			break
-		}
-		if fullPort == nil {
-			return errors.Errorf("port %s not found", port)
-		}
-		if msg == "." {
-			outStream.Write([]byte(" done!\n"))
-		}
-	}
-
-	return realProgramAction(pm,
-		sketch,
-		importFile, importDir, fqbnIn,
-		fullPort,
-		programmerID,
-		verbose, verify, burnBootloader,
-		outStream, errStream)
 }
 
 func realProgramAction(pm *packagemanager.PackageManager,

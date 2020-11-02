@@ -123,6 +123,7 @@ func run(cmd *cobra.Command, args []string) {
 		os.Exit(errorcodes.ErrGeneric)
 	}
 
+	// XXX: FIXME remove this code duplication
 	var path *paths.Path
 	if len(args) > 0 {
 		path = paths.New(args[0])
@@ -192,17 +193,24 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	if err == nil && uploadAfterCompile {
-		portAddress, portProtocol := portArgs.GetAddressAndProtocol(inst)
-		uploadReq := &rpc.UploadReq{
-			Instance:     inst,
-			Fqbn:         fqbn,
-			SketchPath:   sketchPath.String(),
-			Port:         portAddress,
-			PortProtocol: portProtocol,
-			Verbose:      verbose,
-			Verify:       verify,
-			ImportDir:    buildPath,
-			Programmer:   programmer,
+		var uploadReq *rpc.UploadReq
+		if sketch, err := sketches.NewSketchFromPath(sketchPath); err != nil {
+			feedback.Errorf("Error opening sketch: %v", err)
+			os.Exit(errorcodes.ErrGeneric)
+		} else if port, err := portArgs.GetPort(inst, sketch); err != nil {
+			feedback.Errorf("Error during Upload: %v", err)
+			os.Exit(errorcodes.ErrGeneric)
+		} else {
+			uploadReq = &rpc.UploadReq{
+				Instance:   inst,
+				Fqbn:       fqbn,
+				SketchPath: sketchPath.String(),
+				Port:       port.ToRPCPort(),
+				Verbose:    verbose,
+				Verify:     verify,
+				ImportDir:  buildPath,
+				Programmer: programmer,
+			}
 		}
 		var err error
 		if output.OutputFormat == "json" {
@@ -231,6 +239,7 @@ func run(cmd *cobra.Command, args []string) {
 	}
 }
 
+// XXX: Remove this DUPLICATION!!!
 // initSketchPath returns the current working directory
 func initSketchPath(sketchPath *paths.Path) *paths.Path {
 	if sketchPath != nil {

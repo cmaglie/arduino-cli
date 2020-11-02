@@ -79,6 +79,7 @@ func run(command *cobra.Command, args []string) {
 		os.Exit(errorcodes.ErrGeneric)
 	}
 
+	// XXX: FIXME remove this code duplication
 	var path *paths.Path
 	if len(args) > 0 {
 		path = paths.New(args[0])
@@ -93,19 +94,22 @@ func run(command *cobra.Command, args []string) {
 		}
 	}
 
-	portAddress, portProtocol := portArgs.GetAddressAndProtocol(instance)
-
-	if _, err := upload.Upload(context.Background(), &rpc.UploadReq{
-		Instance:     instance,
-		Fqbn:         fqbn,
-		SketchPath:   sketchPath.String(),
-		Port:         portAddress,
-		PortProtocol: portProtocol,
-		Verbose:      verbose,
-		Verify:       verify,
-		ImportFile:   importFile,
-		ImportDir:    importDir,
-		Programmer:   programmer,
+	if sketch, err := sketches.NewSketchFromPath(sketchPath); err != nil {
+		feedback.Errorf("Error opening sketch: %v", err)
+		os.Exit(errorcodes.ErrGeneric)
+	} else if port, err := portArgs.GetPort(instance, sketch); err != nil {
+		feedback.Errorf("Error during Upload: %v", err)
+		os.Exit(errorcodes.ErrGeneric)
+	} else if _, err := upload.Upload(context.Background(), &rpc.UploadReq{
+		Instance:   instance,
+		Fqbn:       fqbn,
+		SketchPath: sketchPath.String(),
+		Port:       port.ToRPCPort(),
+		Verbose:    verbose,
+		Verify:     verify,
+		ImportFile: importFile,
+		ImportDir:  importDir,
+		Programmer: programmer,
 	}, os.Stdout, os.Stderr); err != nil {
 		feedback.Errorf("Error during Upload: %v", err)
 		os.Exit(errorcodes.ErrGeneric)

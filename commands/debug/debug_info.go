@@ -135,7 +135,7 @@ func getDebugProperties(req *debug.DebugConfigReq, pm *packagemanager.PackageMan
 	toolProperties.Set("build.project_name", sketch.Name+".ino")
 
 	// Set debug port property
-	port := req.GetPort()
+	port := req.GetPort().GetAddress()
 	if port != "" {
 		toolProperties.Set("debug.port", port)
 		if strings.HasPrefix(port, "/dev/") {

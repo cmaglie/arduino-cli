@@ -19,6 +19,7 @@ import (
 	"context"
 	"io"
 
+	"github.com/arduino/arduino-cli/arduino/discovery"
 	"github.com/arduino/arduino-cli/commands"
 	rpc "github.com/arduino/arduino-cli/rpc/commands"
 	"github.com/sirupsen/logrus"
@@ -34,14 +35,13 @@ func BurnBootloader(ctx context.Context, req *rpc.BurnBootloaderReq, outStream i
 
 	pm := commands.GetPackageManager(req.GetInstance().GetId())
 
-	err := runProgramAction(
+	err := realProgramAction(
 		pm,
 		nil, // sketch
 		"",  // importFile
 		"",  // importDir
 		req.GetFqbn(),
-		req.GetPort(),
-		req.GetPortProtocol(),
+		discovery.NewPortFromRPCPort(req.GetPort()),
 		req.GetProgrammer(),
 		req.GetVerbose(),
 		req.GetVerify(),

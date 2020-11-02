@@ -16,12 +16,15 @@
 package args
 
 import (
-	"os"
+	"net/url"
+	"time"
 
-	"github.com/arduino/arduino-cli/cli/errorcodes"
-	"github.com/arduino/arduino-cli/cli/feedback"
-	"github.com/arduino/arduino-cli/commands/board"
+	"github.com/arduino/arduino-cli/arduino/discovery"
+	"github.com/arduino/arduino-cli/arduino/sketches"
+	"github.com/arduino/arduino-cli/commands"
 	rpc "github.com/arduino/arduino-cli/rpc/commands"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -37,45 +40,62 @@ func (args *PortArguments) AddToCommand(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&args.protocol, "protocol", "t", "", "Upload port protocol.")
 }
 
-// GetAddressAndProtocol returns the Address and Protocol given by command line
-// arguments or it will try to figure out the correct one by guessing from the
-// available ports.
-func (args *PortArguments) GetAddressAndProtocol(instance *rpc.Instance) (string, string) {
-	// If no port has been specified just return fields as is, port may be not required
-	if args.address == "" {
-		return args.address, args.protocol
+// GetPort returns the Port obtained by parsing command line arguments.
+// The extra metadata for the ports is obtained using the pluggable discoveries.
+func (args *PortArguments) GetPort(instance *rpc.Instance, sketch *sketches.Sketch) (*discovery.Port, error) {
+	// FIXME: make a specification on how a port is specified via command line
+	address := args.address
+	if address == "" && sketch != nil && sketch.Metadata != nil {
+		deviceURI, err := url.Parse(sketch.Metadata.CPU.Port)
+		if err != nil {
+			return nil, errors.Errorf("invalid Device URL format: %s", err)
+		}
+		if deviceURI.Scheme == "serial" {
+			address = deviceURI.Host + deviceURI.Path
+		}
 	}
-	// If both address and protocol are specified return them as is
-	if args.protocol != "" {
-		return args.address, args.protocol
+	if address == "" {
+		return nil, nil
 	}
+
+	logrus.WithField("port", address).Tracef("Upload port")
+
+	// FIXME: commands.GetPackageManager must no be used from "cli"
+	//        move the whole "Find port metadata" in "commands"
+
+	// Find port metadata
+	var fullPort *discovery.Port
+	pm := commands.GetPackageManager(instance.GetId())
+	if pm == nil {
+		return nil, errors.New("invalid instance")
+	}
+	timeout := time.Now().Add(5 * time.Second)
+	//msg := "Waiting for upload port..."
+	for time.Now().Before(timeout) {
+		currentPorts := pm.GetDiscoveriesManager().FindPort(args.address, args.protocol)
+		if len(currentPorts) == 0 {
+			time.Sleep(100 * time.Millisecond)
+			//outStream.Write([]byte(msg))
+			//msg = "."
+			continue
+		}
+		if len(currentPorts) > 1 {
+			return nil, errors.Errorf("ambiguous port %s", args.address)
+		}
+		fullPort = currentPorts[0]
+		break
+	}
+	if fullPort == nil {
+		return nil, errors.Errorf("port %s not found", args.address)
+	}
+	//if msg == "." {
+	//	outStream.Write([]byte(" done!\n"))
+	//}
 
 	// Protocol autodetection:
 	// - if the port address match only one of the available ports use the protocol of the matching port
 	// - if the port address match more than one port exit with an error
 	// - in all other cases assume "serial"
-	portItems, err := board.List(instance.GetId())
-	if err != nil {
-		feedback.Errorf("Error getting port list: %v", err)
-	} else {
-		for _, item := range portItems {
-			port := item.GetPort()
-			if port.Address != args.address {
-				continue
-			}
-			if args.protocol == "" {
-				args.protocol = port.Protocol
-			} else {
-				feedback.Errorf("Ambiguous port '%s', please specify the protocol.", args.address)
-				os.Exit(errorcodes.ErrBadArgument)
-			}
-		}
-	}
 
-	if args.protocol == "" {
-		feedback.Print("Using default upload protocol 'serial'")
-		args.protocol = "serial"
-	}
-
-	return args.address, args.protocol
+	return fullPort, nil
 }

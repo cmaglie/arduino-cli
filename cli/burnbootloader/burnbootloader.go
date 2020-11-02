@@ -26,8 +26,6 @@ import (
 	"github.com/arduino/arduino-cli/commands/upload"
 	rpc "github.com/arduino/arduino-cli/rpc/commands"
 	"github.com/arduino/arduino-cli/table"
-	"github.com/arduino/go-paths-helper"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -68,35 +66,21 @@ func run(command *cobra.Command, args []string) {
 		os.Exit(errorcodes.ErrGeneric)
 	}
 
-	portAddress, portProtocol := portArgs.GetAddressAndProtocol(instance)
-	if _, err := upload.BurnBootloader(context.Background(), &rpc.BurnBootloaderReq{
-		Instance:     instance,
-		Fqbn:         fqbn,
-		Port:         portAddress,
-		PortProtocol: portProtocol,
-		Verbose:      verbose,
-		Verify:       verify,
-		Programmer:   programmer,
+	if port, err := portArgs.GetPort(instance, nil); err != nil {
+		feedback.Errorf("Error during Upload: %v", err)
+		os.Exit(errorcodes.ErrGeneric)
+	} else if _, err := upload.BurnBootloader(context.Background(), &rpc.BurnBootloaderReq{
+		Instance:   instance,
+		Fqbn:       fqbn,
+		Port:       port.ToRPCPort(),
+		Verbose:    verbose,
+		Verify:     verify,
+		Programmer: programmer,
 	}, os.Stdout, os.Stderr); err != nil {
 		feedback.Errorf("Error during Upload: %v", err)
 		os.Exit(errorcodes.ErrGeneric)
 	}
 	os.Exit(0)
-}
-
-// initSketchPath returns the current working directory
-func initSketchPath(sketchPath *paths.Path) *paths.Path {
-	if sketchPath != nil {
-		return sketchPath
-	}
-
-	wd, err := paths.Getwd()
-	if err != nil {
-		feedback.Errorf("Couldn't get current working directory: %v", err)
-		os.Exit(errorcodes.ErrGeneric)
-	}
-	logrus.Infof("Reading sketch from dir: %s", wd)
-	return wd
 }
 
 type programmersList struct {
