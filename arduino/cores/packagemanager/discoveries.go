@@ -28,6 +28,7 @@ func (pm *PackageManager) GetDiscoveriesManager() *discoverymanager.DiscoveriesM
 	return pm.discoveriesManager
 }
 
+// ExtractAllPluggableDiscoveries loads all pluggable discoveries defined in all platforms
 func (pm *PackageManager) ExtractAllPluggableDiscoveries() error {
 	pm.Log.Info("Loading pluggable discoveries")
 	for _, platformRelease := range pm.InstalledPlatformReleases() {
@@ -38,6 +39,8 @@ func (pm *PackageManager) ExtractAllPluggableDiscoveries() error {
 	return nil
 }
 
+// ExtractPluggableDiscoveriesFromPlatformRelease loads all plugabble discoveries defined
+// in the specified PlatformRelease
 func (pm *PackageManager) ExtractPluggableDiscoveriesFromPlatformRelease(platformRelease *cores.PlatformRelease) error {
 	if !platformRelease.IsInstalled() {
 		return errors.Errorf("platform %s not installed", platformRelease)
