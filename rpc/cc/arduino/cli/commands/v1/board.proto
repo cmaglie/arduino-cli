@@ -20,6 +20,7 @@ package cc.arduino.cli.commands.v1;
 option go_package = "github.com/arduino/arduino-cli/rpc/cc/arduino/cli/commands/v1;commands";
 
 import "cc/arduino/cli/commands/v1/common.proto";
+import "cc/arduino/cli/commands/v1/port.proto";
 
 message BoardDetailsRequest {
   // Arduino Core Service instance from the `Init` response.
@@ -54,23 +55,16 @@ message BoardDetailsResponse {
   // The board's custom configuration options.
   repeated ConfigOption config_options = 11;
   // Identifying information for the board (e.g., USB VID/PID).
-  repeated IdentificationPref identification_prefs = 12;
+  repeated BoardIdentificationProperties identification_properties = 12;
   // List of programmers supported by the board
   repeated Programmer programmers = 13;
   // Set to true if the board supports debugging
   bool debugging_supported = 14;
 }
 
-message IdentificationPref {
-  // Identifying information for USB-connected boards.
-  USBID usb_id = 1;
-}
-
-message USBID {
-  // USB vendor ID.
-  string vid = 1;
-  // USB product ID.
-  string pid = 2;
+message BoardIdentificationProperties {
+  // A set of properties that must all be matched to identify the board
+  map<string, string> properites = 1;
 }
 
 message Package {
@@ -156,14 +150,14 @@ message ConfigValue {
 message BoardAttachRequest {
   // Arduino Core Service instance from the `Init` response.
   Instance instance = 1;
-  // The board's URI (e.g., /dev/ttyACM0).
-  string board_uri = 2;
   // Path of the sketch to attach the board to. The board attachment
   // metadata will be saved to `{sketch_path}/sketch.json`.
   string sketch_path = 3;
   // Duration in seconds to search the given URI for a connected board before
   // timing out. The default value is 5 seconds.
   string search_timeout = 4;
+  // The port to attach to
+  Port port = 5;
 }
 
 message BoardAttachResponse {
@@ -177,21 +171,15 @@ message BoardListRequest {
 }
 
 message BoardListResponse {
-  // List of ports and the boards detected on those ports.
-  repeated DetectedPort ports = 1;
+  // List of boards detected.
+  repeated DetectedBoard boards = 2;
 }
 
-message DetectedPort {
-  // Address of the port (e.g., `serial:///dev/ttyACM0`).
-  string address = 1;
-  // Protocol of the port (e.g., `serial`).
-  string protocol = 2;
-  // A human friendly description of the protocol (e.g., "Serial Port (USB)").
-  string protocol_label = 3;
-  // The boards attached to the port.
-  repeated BoardListItem boards = 4;
-  // Serial number of connected board
-  string serial_number = 5;
+message DetectedBoard {
+  // The possible boards attached to the port.
+  repeated BoardListItem boards = 1;
+  // The port details
+  Port port = 2;
 }
 
 message BoardListAllRequest {
@@ -216,12 +204,12 @@ message BoardListWatchRequest {
 }
 
 message BoardListWatchResponse {
-  // Event type as received from the serial discovery tool
+  // Event type (could be `add` or `remove`)
   string event_type = 1;
-  // Information about the port
-  DetectedPort port = 2;
   // Eventual errors when detecting connected boards
   string error = 3;
+  // Information about the detected board
+  DetectedBoard board = 4;
 }
 
 message BoardListItem {
@@ -231,10 +219,6 @@ message BoardListItem {
   string fqbn = 2;
   // If the board is marked as "hidden" in the platform
   bool is_hidden = 3;
-  // Vendor ID
-  string vid = 4;
-  // Product ID
-  string pid = 5;
   // Platform this board belongs to
   Platform platform = 6;
 }

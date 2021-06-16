@@ -20,6 +20,7 @@ package cc.arduino.cli.debug.v1;
 option go_package = "github.com/arduino/arduino-cli/rpc/cc/arduino/cli/debug/v1;debug";
 
 import "cc/arduino/cli/commands/v1/common.proto";
+import "cc/arduino/cli/commands/v1/port.proto";
 
 // DebugService abstracts a debug Session usage
 service DebugService {
@@ -59,8 +60,6 @@ message DebugConfigRequest {
   // Path to the sketch that is running on the board. The compiled executable
   // is expected to be located under this path.
   string sketch_path = 3;
-  // Port of the debugger (optional).
-  string port = 4;
   // Which GDB command interpreter to use.
   string interpreter = 5;
   // Directory containing the compiled executable. If `import_dir` is not
@@ -69,6 +68,8 @@ message DebugConfigRequest {
   string import_dir = 8;
   // The programmer to use for debugging.
   string programmer = 9;
+  // Port of the debugger (optional).
+  cc.arduino.cli.commands.v1.Port port = 10;
 }
 
 //

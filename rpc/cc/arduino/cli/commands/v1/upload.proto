@@ -20,6 +20,7 @@ package cc.arduino.cli.commands.v1;
 option go_package = "github.com/arduino/arduino-cli/rpc/cc/arduino/cli/commands/v1;commands";
 
 import "cc/arduino/cli/commands/v1/common.proto";
+import "cc/arduino/cli/commands/v1/port.proto";
 
 message UploadRequest {
   // Arduino Core Service instance from the `Init` response.
@@ -32,8 +33,6 @@ message UploadRequest {
   // field is defined, the compiled binary is assumed to be at the location and
   // filename under this path where it is saved by the `Compile` method.
   string sketch_path = 3;
-  // The port of the board.
-  string port = 4;
   // Whether to turn on verbose output during the upload.
   bool verbose = 5;
   // After upload, verify that the contents of the memory on the board match the
@@ -52,6 +51,8 @@ message UploadRequest {
   // If set to true, the actual upload will not be performed but a trace output
   // will be printed stdout. This is for debugging purposes.
   bool dry_run = 10;
+  // The port of the board.
+  Port port = 11;
 }
 
 message UploadResponse {
@@ -72,8 +73,6 @@ message UploadUsingProgrammerRequest {
   // field is defined, the compiled binary is assumed to be at the location and
   // filename under this path where it is saved by the `Compile` method.
   string sketch_path = 3;
-  // The port of the board.
-  string port = 4;
   // Whether to turn on verbose output during the upload.
   bool verbose = 5;
   // After upload, verify that the contents of the memory on the board match the
@@ -90,6 +89,8 @@ message UploadUsingProgrammerRequest {
   // If set to true, the actual upload will not be performed but a trace output
   // will be printed stdout. This is for debugging purposes.
   bool dry_run = 10;
+  // The port of the board.
+  Port port = 11;
 }
 
 message UploadUsingProgrammerResponse {
@@ -104,8 +105,6 @@ message BurnBootloaderRequest {
   Instance instance = 1;
   // Fully qualified board name of the target board (e.g., `arduino:avr:uno`).
   string fqbn = 2;
-  // The port of the programmer used to program the bootloader.
-  string port = 3;
   // Whether to turn on verbose output during the programming.
   bool verbose = 4;
   // After programming, verify the contents of the memory on the board match the
@@ -116,6 +115,8 @@ message BurnBootloaderRequest {
   // If set to true, the actual upload will not be performed but a trace output
   // will be printed stdout. This is for debugging purposes.
   bool dry_run = 7;
+  // The port of the programmer used to program the bootloader.
+  Port port = 8;
 }
 
 message BurnBootloaderResponse {
