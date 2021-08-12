@@ -22,9 +22,15 @@ import (
 	"github.com/arduino/arduino-cli/cli/errorcodes"
 	"github.com/arduino/arduino-cli/configuration"
 	"github.com/arduino/arduino-cli/i18n"
+	"github.com/arduino/go-properties-orderedmap"
 )
 
 func main() {
+	// This is only for testing and debugging purposes
+	if e := os.Getenv("ARDUINO_CLI_FORCE_OS_SUFFIX"); e != "" {
+		properties.SetOSSuffix(e)
+	}
+
 	configuration.Settings = configuration.Init(configuration.FindConfigFileInArgsOrWorkingDirectory(os.Args))
 	i18n.Init(configuration.Settings.GetString("locale"))
 	arduinoCmd := cli.NewCommand()
