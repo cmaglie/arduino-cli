@@ -16,7 +16,9 @@
 package main
 
 import (
+	"fmt"
 	"os"
+	"runtime/pprof"
 
 	"github.com/arduino/arduino-cli/cli"
 	"github.com/arduino/arduino-cli/cli/errorcodes"
@@ -25,6 +27,18 @@ import (
 )
 
 func main() {
+	// start golang CPU profiler if needed
+	if cpuprofile := os.Getenv("ARDUINO_CLI_CPUPROFILE"); cpuprofile != "" {
+		f, err := os.Create(cpuprofile)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Error opening CPU profiler output file:", err)
+		}
+		if err := pprof.StartCPUProfile(f); err != nil {
+			fmt.Fprintln(os.Stderr, "Error starting CPU profiler:", err)
+		}
+		defer pprof.StopCPUProfile()
+	}
+
 	configuration.Settings = configuration.Init(configuration.FindConfigFileInArgsOrWorkingDirectory(os.Args))
 	i18n.Init(configuration.Settings.GetString("locale"))
 	arduinoCmd := cli.NewCommand()
