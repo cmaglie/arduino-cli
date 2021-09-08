@@ -50,8 +50,8 @@ type PlatformRelease struct {
 	Version                 *semver.Version
 	BoardsManifest          []*BoardManifest
 	ToolDependencies        ToolDependencies
-	DiscoveryDependencies   DiscoveryDependencies
-	MonitorDependencies     MonitorDependencies
+	DiscoveryDependencies   ToolDependencies
+	MonitorDependencies     ToolDependencies
 	Help                    PlatformReleaseHelp           `json:"-"`
 	Platform                *Platform                     `json:"-"`
 	Properties              *properties.Map               `json:"-"`
@@ -106,7 +106,17 @@ func (deps ToolDependencies) Sort() {
 		if deps[i].ToolName != deps[j].ToolName {
 			return deps[i].ToolName < deps[j].ToolName
 		}
-		return deps[i].ToolVersion.LessThan(deps[j].ToolVersion)
+		if deps[i].ToolVersion == nil {
+			// i.ToolVersion == nil && j.ToolVersion == nil -> false (i == j)
+			// i.ToolVersion == nil && j.ToolVersion != nil -> true  (i < j)
+			return deps[j].ToolVersion != nil
+		} else if deps[j].ToolVersion == nil {
+			// i.ToolVersion != nil && j.ToolVersion == nil -> false (i > j)
+			return false
+		} else {
+			// i.ToolVersion != nil && j.ToolVersion != nil -> perform version compare
+			return deps[i].ToolVersion.LessThan(deps[j].ToolVersion)
+		}
 	})
 }
 
@@ -118,55 +128,10 @@ type ToolDependency struct {
 }
 
 func (dep *ToolDependency) String() string {
-	return dep.ToolPackager + ":" + dep.ToolName + "@" + dep.ToolVersion.String()
-}
-
-// DiscoveryDependencies is a list of DiscoveryDependency
-type DiscoveryDependencies []*DiscoveryDependency
-
-// Sort the DiscoveryDependencies by name.
-func (d DiscoveryDependencies) Sort() {
-	sort.Slice(d, func(i, j int) bool {
-		if d[i].Packager != d[j].Packager {
-			return d[i].Packager < d[j].Packager
-		}
-		return d[i].Name < d[j].Name
-	})
-}
-
-// DiscoveryDependency identifies a specific discovery, version is omitted
-// since the latest version will always be used
-type DiscoveryDependency struct {
-	Name     string
-	Packager string
-}
-
-func (d *DiscoveryDependency) String() string {
-	return fmt.Sprintf("%s:%s", d.Packager, d.Name)
-}
-
-// MonitorDependencies is a list of MonitorDependency
-type MonitorDependencies []*MonitorDependency
-
-// Sort the DiscoveryDependencies by name.
-func (d MonitorDependencies) Sort() {
-	sort.Slice(d, func(i, j int) bool {
-		if d[i].Packager != d[j].Packager {
-			return d[i].Packager < d[j].Packager
-		}
-		return d[i].Name < d[j].Name
-	})
-}
-
-// MonitorDependency identifies a specific monitor, version is omitted
-// since the latest version will always be used
-type MonitorDependency struct {
-	Name     string
-	Packager string
-}
-
-func (d *MonitorDependency) String() string {
-	return fmt.Sprintf("%s:%s", d.Packager, d.Name)
+	if dep.ToolVersion != nil {
+		return dep.ToolPackager + ":" + dep.ToolName + "@" + dep.ToolVersion.String()
+	}
+	return dep.ToolPackager + ":" + dep.ToolName
 }
 
 // GetOrCreateRelease returns the specified release corresponding the provided version,
@@ -277,29 +242,31 @@ func (release *PlatformRelease) GetOrCreateBoard(boardID string) *Board {
 	return board
 }
 
+func (release *PlatformRelease) GetAllToolDependecies() ToolDependencies {
+	res := ToolDependencies{}
+	res = append(res, release.ToolDependencies...)
+	res = append(res, release.DiscoveryDependencies...)
+	res = append(res, release.MonitorDependencies...)
+	return res
+}
+
 // RequiresToolRelease returns true if the PlatformRelease requires the
 // toolReleased passed as parameter
 func (release *PlatformRelease) RequiresToolRelease(toolRelease *ToolRelease) bool {
-	for _, toolDep := range release.ToolDependencies {
-		if toolDep.ToolName == toolRelease.Tool.Name &&
-			toolDep.ToolPackager == toolRelease.Tool.Package.Name &&
-			toolDep.ToolVersion.Equal(toolRelease.Version) {
-			return true
+	match := func(dep *ToolDependency) bool {
+		if dep.ToolVersion != nil {
+			return dep.ToolName == toolRelease.Tool.Name &&
+				dep.ToolPackager == toolRelease.Tool.Package.Name &&
+				dep.ToolVersion.Equal(toolRelease.Version)
+		} else {
+			return dep.ToolName == toolRelease.Tool.Name &&
+				dep.ToolPackager == toolRelease.Tool.Package.Name &&
+				// no version specified: we always want the latest version available
+				toolRelease.Version.Equal(toolRelease.Tool.LatestRelease().Version)
 		}
 	}
-	for _, discovery := range release.DiscoveryDependencies {
-		if discovery.Name == toolRelease.Tool.Name &&
-			discovery.Packager == toolRelease.Tool.Package.Name &&
-			// We always want the latest discovery version available
-			toolRelease.Version.Equal(toolRelease.Tool.LatestRelease().Version) {
-			return true
-		}
-	}
-	for _, monitor := range release.MonitorDependencies {
-		if monitor.Name == toolRelease.Tool.Name &&
-			monitor.Packager == toolRelease.Tool.Package.Name &&
-			// We always want the latest monitor version available
-			toolRelease.Version.Equal(toolRelease.Tool.LatestRelease().Version) {
+	for _, toolDep := range release.GetAllToolDependecies() {
+		if match(toolDep) {
 			return true
 		}
 	}

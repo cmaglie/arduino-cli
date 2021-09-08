@@ -61,10 +61,10 @@ func TestRequiresToolReleaseDiscovery(t *testing.T) {
 	toolDependencyPackager := "arduino"
 
 	release := PlatformRelease{
-		DiscoveryDependencies: DiscoveryDependencies{
+		DiscoveryDependencies: ToolDependencies{
 			{
-				Name:     toolDependencyName,
-				Packager: toolDependencyPackager,
+				ToolName:     toolDependencyName,
+				ToolPackager: toolDependencyPackager,
 			},
 		},
 	}

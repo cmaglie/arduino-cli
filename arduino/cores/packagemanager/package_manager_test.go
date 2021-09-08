@@ -419,21 +419,21 @@ func TestFindToolsRequiredFromPlatformRelease(t *testing.T) {
 		ToolVersion:  semver.ParseRelaxed("6.6.6"),
 		ToolPackager: "arduino",
 	})
-	release.DiscoveryDependencies = append(release.DiscoveryDependencies, &cores.DiscoveryDependency{
-		Name:     "ble-discovery",
-		Packager: "arduino",
+	release.DiscoveryDependencies = append(release.DiscoveryDependencies, &cores.ToolDependency{
+		ToolName:     "ble-discovery",
+		ToolPackager: "arduino",
 	})
-	release.DiscoveryDependencies = append(release.DiscoveryDependencies, &cores.DiscoveryDependency{
-		Name:     "serial-discovery",
-		Packager: "arduino",
+	release.DiscoveryDependencies = append(release.DiscoveryDependencies, &cores.ToolDependency{
+		ToolName:     "serial-discovery",
+		ToolPackager: "arduino",
 	})
-	release.MonitorDependencies = append(release.MonitorDependencies, &cores.MonitorDependency{
-		Name:     "ble-monitor",
-		Packager: "arduino",
+	release.MonitorDependencies = append(release.MonitorDependencies, &cores.ToolDependency{
+		ToolName:     "ble-monitor",
+		ToolPackager: "arduino",
 	})
-	release.MonitorDependencies = append(release.MonitorDependencies, &cores.MonitorDependency{
-		Name:     "serial-monitor",
-		Packager: "arduino",
+	release.MonitorDependencies = append(release.MonitorDependencies, &cores.ToolDependency{
+		ToolName:     "serial-monitor",
+		ToolPackager: "arduino",
 	})
 	// We set this to fake the platform is installed
 	release.InstallDir = fakePath

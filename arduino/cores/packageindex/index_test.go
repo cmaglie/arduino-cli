@@ -71,24 +71,24 @@ func TestIndexFromPlatformRelease(t *testing.T) {
 				ToolVersion:  semver.ParseRelaxed("1.2.1"),
 			},
 		},
-		DiscoveryDependencies: cores.DiscoveryDependencies{
+		DiscoveryDependencies: cores.ToolDependencies{
 			{
-				Packager: "arduino",
-				Name:     "ble-discovery",
+				ToolPackager: "arduino",
+				ToolName:     "ble-discovery",
 			},
 			{
-				Packager: "arduino",
-				Name:     "serial-discovery",
+				ToolPackager: "arduino",
+				ToolName:     "serial-discovery",
 			},
 		},
-		MonitorDependencies: cores.MonitorDependencies{
+		MonitorDependencies: cores.ToolDependencies{
 			{
-				Packager: "arduino",
-				Name:     "ble-monitor",
+				ToolPackager: "arduino",
+				ToolName:     "ble-monitor",
 			},
 			{
-				Packager: "arduino",
-				Name:     "serial-monitor",
+				ToolPackager: "arduino",
+				ToolName:     "serial-monitor",
 			},
 		},
 		Platform: &cores.Platform{

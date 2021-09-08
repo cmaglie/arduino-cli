@@ -154,16 +154,16 @@ func IndexFromPlatformRelease(pr *cores.PlatformRelease) Index {
 	discoveries := []indexDiscoveryDependency{}
 	for _, d := range pr.DiscoveryDependencies {
 		discoveries = append(discoveries, indexDiscoveryDependency{
-			Packager: d.Packager,
-			Name:     d.Name,
+			Packager: d.ToolPackager,
+			Name:     d.ToolName,
 		})
 	}
 
 	monitors := []indexMonitorDependency{}
 	for _, m := range pr.MonitorDependencies {
 		monitors = append(monitors, indexMonitorDependency{
-			Packager: m.Packager,
-			Name:     m.Name,
+			Packager: m.ToolPackager,
+			Name:     m.ToolName,
 		})
 	}
 
@@ -283,23 +283,23 @@ func (inPlatformRelease indexPlatformRelease) extractToolDependencies() cores.To
 	return res
 }
 
-func (inPlatformRelease indexPlatformRelease) extractDiscoveryDependencies() cores.DiscoveryDependencies {
-	res := make(cores.DiscoveryDependencies, len(inPlatformRelease.DiscoveryDependencies))
+func (inPlatformRelease indexPlatformRelease) extractDiscoveryDependencies() cores.ToolDependencies {
+	res := make(cores.ToolDependencies, len(inPlatformRelease.DiscoveryDependencies))
 	for i, discovery := range inPlatformRelease.DiscoveryDependencies {
-		res[i] = &cores.DiscoveryDependency{
-			Name:     discovery.Name,
-			Packager: discovery.Packager,
+		res[i] = &cores.ToolDependency{
+			ToolName:     discovery.Name,
+			ToolPackager: discovery.Packager,
 		}
 	}
 	return res
 }
 
-func (inPlatformRelease indexPlatformRelease) extractMonitorDependencies() cores.MonitorDependencies {
-	res := make(cores.MonitorDependencies, len(inPlatformRelease.MonitorDependencies))
-	for i, discovery := range inPlatformRelease.MonitorDependencies {
-		res[i] = &cores.MonitorDependency{
-			Name:     discovery.Name,
-			Packager: discovery.Packager,
+func (inPlatformRelease indexPlatformRelease) extractMonitorDependencies() cores.ToolDependencies {
+	res := make(cores.ToolDependencies, len(inPlatformRelease.MonitorDependencies))
+	for i, monitor := range inPlatformRelease.MonitorDependencies {
+		res[i] = &cores.ToolDependency{
+			ToolName:     monitor.Name,
+			ToolPackager: monitor.Packager,
 		}
 	}
 	return res
