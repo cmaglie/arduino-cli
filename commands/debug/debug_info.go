@@ -31,7 +31,7 @@ import (
 )
 
 // GetDebugConfig returns metadata to start debugging with the specified board
-func GetDebugConfig(ctx context.Context, req *debug.DebugConfigRequest) (*debug.GetDebugConfigResponse, error) {
+func GetDebugConfig(ctx context.Context, req *debug.GetDebugConfigRequest) (*debug.GetDebugConfigResponse, error) {
 	pme, release := commands.GetPackageManagerExplorer(req)
 	if pme == nil {
 		return nil, &arduino.InvalidInstanceError{}
@@ -40,7 +40,7 @@ func GetDebugConfig(ctx context.Context, req *debug.DebugConfigRequest) (*debug.
 	return getDebugProperties(req, pme)
 }
 
-func getDebugProperties(req *debug.DebugConfigRequest, pme *packagemanager.Explorer) (*debug.GetDebugConfigResponse, error) {
+func getDebugProperties(req *debug.GetDebugConfigRequest, pme *packagemanager.Explorer) (*debug.GetDebugConfigResponse, error) {
 	// TODO: make a generic function to extract sketch from request
 	// and remove duplication in commands/compile.go
 	if req.GetSketchPath() == "" {

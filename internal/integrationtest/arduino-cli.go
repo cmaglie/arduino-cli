@@ -419,7 +419,7 @@ func (inst *ArduinoCLIInstance) LibraryList(ctx context.Context, name, fqbn stri
 
 // LibraryInstall calls the "LibraryInstall" gRPC method.
 func (inst *ArduinoCLIInstance) LibraryInstall(ctx context.Context, name, version string, noDeps, noOverwrite, installAsBundled bool) (commands.ArduinoCoreService_LibraryInstallClient, error) {
-	installLocation := commands.LibraryInstallLocation_LIBRARY_INSTALL_LOCATION_USER
+	installLocation := commands.LibraryInstallLocation_LIBRARY_INSTALL_LOCATION_USER_OR_UNSPECIFIED
 	if installAsBundled {
 		installLocation = commands.LibraryInstallLocation_LIBRARY_INSTALL_LOCATION_BUILTIN
 	}

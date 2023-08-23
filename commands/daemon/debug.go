@@ -68,6 +68,6 @@ func (s *DebugService) Debug(stream dbg.DebugService_DebugServer) error {
 }
 
 // GetDebugConfig return metadata about a debug session
-func (s *DebugService) GetDebugConfig(ctx context.Context, req *dbg.DebugConfigRequest) (*dbg.GetDebugConfigResponse, error) {
+func (s *DebugService) GetDebugConfig(ctx context.Context, req *dbg.GetDebugConfigRequest) (*dbg.GetDebugConfigResponse, error) {
 	return cmd.GetDebugConfig(ctx, req)
 }

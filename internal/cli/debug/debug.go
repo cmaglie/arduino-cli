@@ -82,7 +82,7 @@ func runDebugCommand(command *cobra.Command, args []string) {
 		feedback.FatalError(err, feedback.ErrGeneric)
 	}
 	fqbn, port := arguments.CalculateFQBNAndPort(&portArgs, &fqbnArg, instance, sk.GetDefaultFqbn(), sk.GetDefaultPort(), sk.GetDefaultProtocol())
-	debugConfigRequested := &dbg.DebugConfigRequest{
+	debugConfigRequested := &dbg.GetDebugConfigRequest{
 		Instance:    instance,
 		Fqbn:        fqbn,
 		SketchPath:  sketchPath.String(),

@@ -963,7 +963,7 @@ func callDebugger(debugStreamingOpenClient dbg.DebugService_DebugClient, instanc
 	currDir, _ := os.Getwd()
 	log.Printf("Send debug request")
 	err := debugStreamingOpenClient.Send(&dbg.DebugRequest{
-		DebugRequest: &dbg.DebugConfigRequest{
+		DebugRequest: &dbg.GetDebugConfigRequest{
 			Instance:   &rpc.Instance{Id: instance.GetId()},
 			Fqbn:       "arduino:samd:mkr1000",
 			SketchPath: filepath.Join(currDir, "hello"),

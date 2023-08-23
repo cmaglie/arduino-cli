@@ -44,7 +44,7 @@ const (
 type DebugServiceClient interface {
 	// Start a debug session and communicate with the debugger tool.
 	Debug(ctx context.Context, opts ...grpc.CallOption) (DebugService_DebugClient, error)
-	GetDebugConfig(ctx context.Context, in *DebugConfigRequest, opts ...grpc.CallOption) (*GetDebugConfigResponse, error)
+	GetDebugConfig(ctx context.Context, in *GetDebugConfigRequest, opts ...grpc.CallOption) (*GetDebugConfigResponse, error)
 }
 
 type debugServiceClient struct {
@@ -86,7 +86,7 @@ func (x *debugServiceDebugClient) Recv() (*DebugResponse, error) {
 	return m, nil
 }
 
-func (c *debugServiceClient) GetDebugConfig(ctx context.Context, in *DebugConfigRequest, opts ...grpc.CallOption) (*GetDebugConfigResponse, error) {
+func (c *debugServiceClient) GetDebugConfig(ctx context.Context, in *GetDebugConfigRequest, opts ...grpc.CallOption) (*GetDebugConfigResponse, error) {
 	out := new(GetDebugConfigResponse)
 	err := c.cc.Invoke(ctx, DebugService_GetDebugConfig_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -101,7 +101,7 @@ func (c *debugServiceClient) GetDebugConfig(ctx context.Context, in *DebugConfig
 type DebugServiceServer interface {
 	// Start a debug session and communicate with the debugger tool.
 	Debug(DebugService_DebugServer) error
-	GetDebugConfig(context.Context, *DebugConfigRequest) (*GetDebugConfigResponse, error)
+	GetDebugConfig(context.Context, *GetDebugConfigRequest) (*GetDebugConfigResponse, error)
 	mustEmbedUnimplementedDebugServiceServer()
 }
 
@@ -112,7 +112,7 @@ type UnimplementedDebugServiceServer struct {
 func (UnimplementedDebugServiceServer) Debug(DebugService_DebugServer) error {
 	return status.Errorf(codes.Unimplemented, "method Debug not implemented")
 }
-func (UnimplementedDebugServiceServer) GetDebugConfig(context.Context, *DebugConfigRequest) (*GetDebugConfigResponse, error) {
+func (UnimplementedDebugServiceServer) GetDebugConfig(context.Context, *GetDebugConfigRequest) (*GetDebugConfigResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDebugConfig not implemented")
 }
 func (UnimplementedDebugServiceServer) mustEmbedUnimplementedDebugServiceServer() {}
@@ -155,7 +155,7 @@ func (x *debugServiceDebugServer) Recv() (*DebugRequest, error) {
 }
 
 func _DebugService_GetDebugConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DebugConfigRequest)
+	in := new(GetDebugConfigRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -167,7 +167,7 @@ func _DebugService_GetDebugConfig_Handler(srv interface{}, ctx context.Context, 
 		FullMethod: DebugService_GetDebugConfig_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DebugServiceServer).GetDebugConfig(ctx, req.(*DebugConfigRequest))
+		return srv.(DebugServiceServer).GetDebugConfig(ctx, req.(*GetDebugConfigRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

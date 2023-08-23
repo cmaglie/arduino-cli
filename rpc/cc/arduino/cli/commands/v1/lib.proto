@@ -55,7 +55,7 @@ message LibraryInstallRequest {
 enum LibraryInstallLocation {
   // In the `libraries` subdirectory of the user directory (sketchbook). This is
   // the default if not specified.
-  LIBRARY_INSTALL_LOCATION_USER = 0;
+  LIBRARY_INSTALL_LOCATION_USER_OR_UNSPECIFIED = 0;
   // In the configured 'builtin.libraries' directory.
   LIBRARY_INSTALL_LOCATION_BUILTIN = 1;
 }
@@ -147,10 +147,11 @@ message LibrarySearchRequest {
 }
 
 enum LibrarySearchStatus {
+  LIBRARY_SEARCH_STATUS_UNSPECIFIED = 0;
   // No search results were found.
-  LIBRARY_SEARCH_STATUS_FAILED = 0;
+  LIBRARY_SEARCH_STATUS_FAILED = 1;
   // Search results were found.
-  LIBRARY_SEARCH_STATUS_SUCCESS = 1;
+  LIBRARY_SEARCH_STATUS_SUCCESS = 2;
 }
 
 message LibrarySearchResponse {
@@ -319,25 +320,27 @@ message Library {
 }
 
 enum LibraryLayout {
+  LIBRARY_LAYOUT_UNSPECIFIED = 0;
   // Library is in the 1.0 Arduino library format.
-  LIBRARY_LAYOUT_FLAT = 0;
+  LIBRARY_LAYOUT_FLAT = 1;
   // Library is in the 1.5 Arduino library format.
-  LIBRARY_LAYOUT_RECURSIVE = 1;
+  LIBRARY_LAYOUT_RECURSIVE = 2;
 }
 
 enum LibraryLocation {
+  LIBRARY_LOCATION_UNSPECIFIED = 0;
   // In the configured 'builtin.libraries' directory.
-  LIBRARY_LOCATION_BUILTIN = 0;
+  LIBRARY_LOCATION_BUILTIN = 1;
   // In the `libraries` subdirectory of the user directory (sketchbook).
-  LIBRARY_LOCATION_USER = 1;
+  LIBRARY_LOCATION_USER = 2;
   // In the `libraries` subdirectory of a platform.
-  LIBRARY_LOCATION_PLATFORM_BUILTIN = 2;
+  LIBRARY_LOCATION_PLATFORM_BUILTIN = 3;
   // When `LibraryLocation` is used in a context where a board is specified,
   // this indicates the library is in the `libraries` subdirectory of a
   // platform referenced by the board's platform.
-  LIBRARY_LOCATION_REFERENCED_PLATFORM_BUILTIN = 3;
+  LIBRARY_LOCATION_REFERENCED_PLATFORM_BUILTIN = 4;
   // Outside the `libraries` folders managed by the CLI.
-  LIBRARY_LOCATION_UNMANAGED = 4;
+  LIBRARY_LOCATION_UNMANAGED = 5;
 }
 
 message ZipLibraryInstallRequest {

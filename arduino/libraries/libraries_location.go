@@ -130,7 +130,7 @@ func FromRPCLibraryInstallLocation(l rpc.LibraryInstallLocation) LibraryLocation
 	switch l {
 	case rpc.LibraryInstallLocation_LIBRARY_INSTALL_LOCATION_BUILTIN:
 		return IDEBuiltIn
-	case rpc.LibraryInstallLocation_LIBRARY_INSTALL_LOCATION_USER:
+	case rpc.LibraryInstallLocation_LIBRARY_INSTALL_LOCATION_USER_OR_UNSPECIFIED:
 		return User
 	default:
 		panic(fmt.Sprintf("invalid rpc.LibraryInstallLocation value %d", l))

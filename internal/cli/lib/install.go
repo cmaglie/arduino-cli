@@ -128,7 +128,7 @@ func runInstallCommand(args []string, noDeps bool, noOverwrite bool, gitURL bool
 	}
 
 	for _, libRef := range libRefs {
-		installLocation := rpc.LibraryInstallLocation_LIBRARY_INSTALL_LOCATION_USER
+		installLocation := rpc.LibraryInstallLocation_LIBRARY_INSTALL_LOCATION_USER_OR_UNSPECIFIED
 		if useBuiltinLibrariesDir {
 			installLocation = rpc.LibraryInstallLocation_LIBRARY_INSTALL_LOCATION_BUILTIN
 		}

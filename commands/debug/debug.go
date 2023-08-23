@@ -42,7 +42,7 @@ var tr = i18n.Tr
 // grpc Out <- tool stdOut
 // grpc Out <- tool stdErr
 // It also implements tool process lifecycle management
-func Debug(ctx context.Context, req *dbg.DebugConfigRequest, inStream io.Reader, out io.Writer, interrupt <-chan os.Signal) (*dbg.DebugResponse, error) {
+func Debug(ctx context.Context, req *dbg.GetDebugConfigRequest, inStream io.Reader, out io.Writer, interrupt <-chan os.Signal) (*dbg.DebugResponse, error) {
 
 	// Get debugging command line to run debugger
 	pme, release := commands.GetPackageManagerExplorer(req)
@@ -117,7 +117,7 @@ func Debug(ctx context.Context, req *dbg.DebugConfigRequest, inStream io.Reader,
 }
 
 // getCommandLine compose a debug command represented by a core recipe
-func getCommandLine(req *dbg.DebugConfigRequest, pme *packagemanager.Explorer) ([]string, error) {
+func getCommandLine(req *dbg.GetDebugConfigRequest, pme *packagemanager.Explorer) ([]string, error) {
 	debugInfo, err := getDebugProperties(req, pme)
 	if err != nil {
 		return nil, err
