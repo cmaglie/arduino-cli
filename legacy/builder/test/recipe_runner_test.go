@@ -34,8 +34,16 @@ func TestRecipeRunner(t *testing.T) {
 
 	buildProperties.Set("recipe.hooks.prebuild.1.pattern", "echo")
 
+	sketchBuildPath, librariesBuildPath, coreBuildPath,
+		warningsLevel, librariesResolutionResults, err := builder.AddAdditionalEntriesToContext(ctx.BuildPath, ctx.WarningsLevel)
+	NoError(t, err)
+	ctx.SketchBuildPath = sketchBuildPath
+	ctx.LibrariesBuildPath = librariesBuildPath
+	ctx.CoreBuildPath = coreBuildPath
+	ctx.WarningsLevel = warningsLevel
+	ctx.LibrariesResolutionResults = librariesResolutionResults
+
 	commands := []types.Command{
-		&builder.AddAdditionalEntriesToContext{},
 		&builder.RecipeByPrefixSuffixRunner{Prefix: "recipe.hooks.prebuild", Suffix: ".pattern"},
 	}
 
