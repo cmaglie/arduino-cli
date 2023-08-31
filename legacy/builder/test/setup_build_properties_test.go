@@ -34,15 +34,6 @@ func TestSetupBuildProperties(t *testing.T) {
 	ctx = prepareBuilderTestContext(t, ctx, paths.New("sketch1", "sketch1.ino"), "arduino:avr:uno")
 	defer cleanUpBuilderTestContext(t, ctx)
 
-	sketchBuildPath, librariesBuildPath, coreBuildPath,
-		warningsLevel, librariesResolutionResults, err := builder.AddAdditionalEntriesToContext(ctx.BuildPath, ctx.WarningsLevel)
-	NoError(t, err)
-	ctx.SketchBuildPath = sketchBuildPath
-	ctx.LibrariesBuildPath = librariesBuildPath
-	ctx.CoreBuildPath = coreBuildPath
-	ctx.WarningsLevel = warningsLevel
-	ctx.LibrariesResolutionResults = librariesResolutionResults
-
 	buildProperties := ctx.BuildProperties
 
 	require.Equal(t, "ARDUINO", buildProperties.Get("software"))
@@ -108,15 +99,6 @@ func TestSetupBuildPropertiesUserHardware(t *testing.T) {
 	}
 	ctx = prepareBuilderTestContext(t, ctx, paths.New("sketch1", "sketch1.ino"), "my_avr_platform:avr:custom_yun")
 	defer cleanUpBuilderTestContext(t, ctx)
-
-	sketchBuildPath, librariesBuildPath, coreBuildPath,
-		warningsLevel, librariesResolutionResults, err := builder.AddAdditionalEntriesToContext(ctx.BuildPath, ctx.WarningsLevel)
-	NoError(t, err)
-	ctx.SketchBuildPath = sketchBuildPath
-	ctx.LibrariesBuildPath = librariesBuildPath
-	ctx.CoreBuildPath = coreBuildPath
-	ctx.WarningsLevel = warningsLevel
-	ctx.LibrariesResolutionResults = librariesResolutionResults
 
 	buildProperties := ctx.BuildProperties
 

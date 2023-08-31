@@ -47,15 +47,6 @@ func TestLoadLibrariesAVR(t *testing.T) {
 	ctx = prepareBuilderTestContext(t, ctx, nil, "arduino:avr:leonardo")
 	defer cleanUpBuilderTestContext(t, ctx)
 
-	sketchBuildPath, librariesBuildPath, coreBuildPath,
-		warningsLevel, librariesResolutionResults, err := builder.AddAdditionalEntriesToContext(ctx.BuildPath, ctx.WarningsLevel)
-	NoError(t, err)
-	ctx.SketchBuildPath = sketchBuildPath
-	ctx.LibrariesBuildPath = librariesBuildPath
-	ctx.CoreBuildPath = coreBuildPath
-	ctx.WarningsLevel = warningsLevel
-	ctx.LibrariesResolutionResults = librariesResolutionResults
-
 	commands := []types.Command{
 		&builder.LibrariesLoader{},
 	}
@@ -161,15 +152,6 @@ func TestLoadLibrariesSAM(t *testing.T) {
 	ctx = prepareBuilderTestContext(t, ctx, nil, "arduino:sam:arduino_due_x_dbg")
 	defer cleanUpBuilderTestContext(t, ctx)
 
-	sketchBuildPath, librariesBuildPath, coreBuildPath,
-		warningsLevel, librariesResolutionResults, err := builder.AddAdditionalEntriesToContext(ctx.BuildPath, ctx.WarningsLevel)
-	NoError(t, err)
-	ctx.SketchBuildPath = sketchBuildPath
-	ctx.LibrariesBuildPath = librariesBuildPath
-	ctx.CoreBuildPath = coreBuildPath
-	ctx.WarningsLevel = warningsLevel
-	ctx.LibrariesResolutionResults = librariesResolutionResults
-
 	commands := []types.Command{
 		&builder.LibrariesLoader{},
 	}
@@ -248,15 +230,6 @@ func TestLoadLibrariesAVRNoDuplicateLibrariesFolders(t *testing.T) {
 	ctx = prepareBuilderTestContext(t, ctx, nil, "arduino:avr:leonardo")
 	defer cleanUpBuilderTestContext(t, ctx)
 
-	sketchBuildPath, librariesBuildPath, coreBuildPath,
-		warningsLevel, librariesResolutionResults, err := builder.AddAdditionalEntriesToContext(ctx.BuildPath, ctx.WarningsLevel)
-	NoError(t, err)
-	ctx.SketchBuildPath = sketchBuildPath
-	ctx.LibrariesBuildPath = librariesBuildPath
-	ctx.CoreBuildPath = coreBuildPath
-	ctx.WarningsLevel = warningsLevel
-	ctx.LibrariesResolutionResults = librariesResolutionResults
-
 	commands := []types.Command{
 		&builder.LibrariesLoader{},
 	}
@@ -280,15 +253,6 @@ func TestLoadLibrariesMyAVRPlatform(t *testing.T) {
 	}
 	ctx = prepareBuilderTestContext(t, ctx, nil, "my_avr_platform:avr:custom_yun")
 	defer cleanUpBuilderTestContext(t, ctx)
-
-	sketchBuildPath, librariesBuildPath, coreBuildPath,
-		warningsLevel, librariesResolutionResults, err := builder.AddAdditionalEntriesToContext(ctx.BuildPath, ctx.WarningsLevel)
-	NoError(t, err)
-	ctx.SketchBuildPath = sketchBuildPath
-	ctx.LibrariesBuildPath = librariesBuildPath
-	ctx.CoreBuildPath = coreBuildPath
-	ctx.WarningsLevel = warningsLevel
-	ctx.LibrariesResolutionResults = librariesResolutionResults
 
 	commands := []types.Command{
 		&builder.LibrariesLoader{},
