@@ -17,12 +17,11 @@ package builder
 
 import (
 	"github.com/arduino/arduino-cli/legacy/builder/constants"
-	"github.com/arduino/arduino-cli/legacy/builder/types"
 	"github.com/arduino/go-paths-helper"
 	"github.com/pkg/errors"
 )
 
-func AddAdditionalEntriesToContext(buildPath *paths.Path, warningLevel string) (*paths.Path, *paths.Path, *paths.Path, string, map[string]types.LibraryResolutionResult, error) {
+func AddAdditionalEntriesToContext(buildPath *paths.Path, warningLevel string) (*paths.Path, *paths.Path, *paths.Path, string, error) {
 	var sketchBuildPath, librariesBuildPath, coreBuildPath *paths.Path
 	var err error
 
@@ -30,15 +29,15 @@ func AddAdditionalEntriesToContext(buildPath *paths.Path, warningLevel string) (
 		bPath := buildPath
 		sketchBuildPath, err = bPath.Join(constants.FOLDER_SKETCH).Abs()
 		if err != nil {
-			return nil, nil, nil, "", nil, errors.WithStack(err)
+			return nil, nil, nil, "", errors.WithStack(err)
 		}
 		librariesBuildPath, err = bPath.Join(constants.FOLDER_LIBRARIES).Abs()
 		if err != nil {
-			return nil, nil, nil, "", nil, errors.WithStack(err)
+			return nil, nil, nil, "", errors.WithStack(err)
 		}
 		coreBuildPath, err = bPath.Join(constants.FOLDER_CORE).Abs()
 		if err != nil {
-			return nil, nil, nil, "", nil, errors.WithStack(err)
+			return nil, nil, nil, "", errors.WithStack(err)
 		}
 	}
 
@@ -46,5 +45,5 @@ func AddAdditionalEntriesToContext(buildPath *paths.Path, warningLevel string) (
 		warningLevel = DEFAULT_WARNINGS_LEVEL
 	}
 
-	return sketchBuildPath, librariesBuildPath, coreBuildPath, warningLevel, map[string]types.LibraryResolutionResult{}, nil
+	return sketchBuildPath, librariesBuildPath, coreBuildPath, warningLevel, nil
 }

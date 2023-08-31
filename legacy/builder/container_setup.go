@@ -24,7 +24,7 @@ type ContainerSetupHardwareToolsLibsSketchAndProps struct{}
 
 func (s *ContainerSetupHardwareToolsLibsSketchAndProps) Run(ctx *types.Context) error {
 	sketchBuildPath, librariesBuildPath, coreBuildPath,
-		warningsLevel, librariesResolutionResults, err := AddAdditionalEntriesToContext(ctx.BuildPath, ctx.WarningsLevel)
+		warningsLevel, err := AddAdditionalEntriesToContext(ctx.BuildPath, ctx.WarningsLevel)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -32,7 +32,6 @@ func (s *ContainerSetupHardwareToolsLibsSketchAndProps) Run(ctx *types.Context) 
 	ctx.LibrariesBuildPath = librariesBuildPath
 	ctx.CoreBuildPath = coreBuildPath
 	ctx.WarningsLevel = warningsLevel
-	ctx.LibrariesResolutionResults = librariesResolutionResults
 
 	commands := []types.Command{
 		&FailIfBuildPathEqualsSketchPath{},
