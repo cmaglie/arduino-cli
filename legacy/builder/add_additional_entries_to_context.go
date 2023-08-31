@@ -26,16 +26,16 @@ func AddAdditionalEntriesToContext(buildPath *paths.Path, warningLevel string) (
 	var err error
 
 	if buildPath != nil {
-		bPath := buildPath
-		sketchBuildPath, err = bPath.Join(constants.FOLDER_SKETCH).Abs()
+		buildPath := buildPath
+		sketchBuildPath, err = buildPath.Join(constants.FOLDER_SKETCH).Abs()
 		if err != nil {
 			return nil, nil, nil, "", errors.WithStack(err)
 		}
-		librariesBuildPath, err = bPath.Join(constants.FOLDER_LIBRARIES).Abs()
+		librariesBuildPath, err = buildPath.Join(constants.FOLDER_LIBRARIES).Abs()
 		if err != nil {
 			return nil, nil, nil, "", errors.WithStack(err)
 		}
-		coreBuildPath, err = bPath.Join(constants.FOLDER_CORE).Abs()
+		coreBuildPath, err = buildPath.Join(constants.FOLDER_CORE).Abs()
 		if err != nil {
 			return nil, nil, nil, "", errors.WithStack(err)
 		}
