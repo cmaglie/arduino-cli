@@ -26,7 +26,6 @@ func AddAdditionalEntriesToContext(buildPath *paths.Path, warningLevel string) (
 	var err error
 
 	if buildPath != nil {
-		buildPath := buildPath
 		sketchBuildPath, err = buildPath.Join(constants.FOLDER_SKETCH).Abs()
 		if err != nil {
 			return nil, nil, nil, "", errors.WithStack(err)
