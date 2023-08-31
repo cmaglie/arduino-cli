@@ -23,8 +23,18 @@ import (
 type ContainerSetupHardwareToolsLibsSketchAndProps struct{}
 
 func (s *ContainerSetupHardwareToolsLibsSketchAndProps) Run(ctx *types.Context) error {
+	sketchBuildPath, librariesBuildPath, coreBuildPath,
+		warningsLevel, librariesResolutionResults, err := AddAdditionalEntriesToContext(ctx.BuildPath, ctx.WarningsLevel)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	ctx.SketchBuildPath = sketchBuildPath
+	ctx.LibrariesBuildPath = librariesBuildPath
+	ctx.CoreBuildPath = coreBuildPath
+	ctx.WarningsLevel = warningsLevel
+	ctx.LibrariesResolutionResults = librariesResolutionResults
+
 	commands := []types.Command{
-		&AddAdditionalEntriesToContext{},
 		&FailIfBuildPathEqualsSketchPath{},
 		&LibrariesLoader{},
 	}
