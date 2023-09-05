@@ -47,7 +47,18 @@ func TestPrototypesAdderBridgeExample(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
@@ -71,7 +82,18 @@ func TestPrototypesAdderSketchWithIfDef(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
@@ -81,7 +103,7 @@ func TestPrototypesAdderSketchWithIfDef(t *testing.T) {
 
 	preprocessed := LoadAndInterpolate(t, filepath.Join("SketchWithIfDef", "SketchWithIfDef.preprocessed.txt"), ctx)
 	preprocessedSketch := loadPreprocessedSketch(t, ctx)
-	require.Equal(t, preprocessed, strings.Replace(preprocessedSketch, "\r\n", "\n", -1))
+	require.Equal(t, preprocessed, strings.ReplaceAll(preprocessedSketch, "\r\n", "\n"))
 }
 
 func TestPrototypesAdderBaladuino(t *testing.T) {
@@ -95,7 +117,18 @@ func TestPrototypesAdderBaladuino(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
@@ -105,7 +138,7 @@ func TestPrototypesAdderBaladuino(t *testing.T) {
 
 	preprocessed := LoadAndInterpolate(t, filepath.Join("Baladuino", "Baladuino.preprocessed.txt"), ctx)
 	preprocessedSketch := loadPreprocessedSketch(t, ctx)
-	require.Equal(t, preprocessed, strings.Replace(preprocessedSketch, "\r\n", "\n", -1))
+	require.Equal(t, preprocessed, strings.ReplaceAll(preprocessedSketch, "\r\n", "\n"))
 }
 
 func TestPrototypesAdderCharWithEscapedDoubleQuote(t *testing.T) {
@@ -119,7 +152,18 @@ func TestPrototypesAdderCharWithEscapedDoubleQuote(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
@@ -129,7 +173,7 @@ func TestPrototypesAdderCharWithEscapedDoubleQuote(t *testing.T) {
 
 	preprocessed := LoadAndInterpolate(t, filepath.Join("CharWithEscapedDoubleQuote", "CharWithEscapedDoubleQuote.preprocessed.txt"), ctx)
 	preprocessedSketch := loadPreprocessedSketch(t, ctx)
-	require.Equal(t, preprocessed, strings.Replace(preprocessedSketch, "\r\n", "\n", -1))
+	require.Equal(t, preprocessed, strings.ReplaceAll(preprocessedSketch, "\r\n", "\n"))
 }
 
 func TestPrototypesAdderIncludeBetweenMultilineComment(t *testing.T) {
@@ -143,7 +187,18 @@ func TestPrototypesAdderIncludeBetweenMultilineComment(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
@@ -153,7 +208,7 @@ func TestPrototypesAdderIncludeBetweenMultilineComment(t *testing.T) {
 
 	preprocessed := LoadAndInterpolate(t, filepath.Join("IncludeBetweenMultilineComment", "IncludeBetweenMultilineComment.preprocessed.txt"), ctx)
 	preprocessedSketch := loadPreprocessedSketch(t, ctx)
-	require.Equal(t, preprocessed, strings.Replace(preprocessedSketch, "\r\n", "\n", -1))
+	require.Equal(t, preprocessed, strings.ReplaceAll(preprocessedSketch, "\r\n", "\n"))
 }
 
 func TestPrototypesAdderLineContinuations(t *testing.T) {
@@ -167,7 +222,18 @@ func TestPrototypesAdderLineContinuations(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
@@ -177,7 +243,7 @@ func TestPrototypesAdderLineContinuations(t *testing.T) {
 
 	preprocessed := LoadAndInterpolate(t, filepath.Join("LineContinuations", "LineContinuations.preprocessed.txt"), ctx)
 	preprocessedSketch := loadPreprocessedSketch(t, ctx)
-	require.Equal(t, preprocessed, strings.Replace(preprocessedSketch, "\r\n", "\n", -1))
+	require.Equal(t, preprocessed, strings.ReplaceAll(preprocessedSketch, "\r\n", "\n"))
 }
 
 func TestPrototypesAdderStringWithComment(t *testing.T) {
@@ -191,7 +257,18 @@ func TestPrototypesAdderStringWithComment(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
@@ -201,7 +278,7 @@ func TestPrototypesAdderStringWithComment(t *testing.T) {
 
 	preprocessed := LoadAndInterpolate(t, filepath.Join("StringWithComment", "StringWithComment.preprocessed.txt"), ctx)
 	preprocessedSketch := loadPreprocessedSketch(t, ctx)
-	require.Equal(t, preprocessed, strings.Replace(preprocessedSketch, "\r\n", "\n", -1))
+	require.Equal(t, preprocessed, strings.ReplaceAll(preprocessedSketch, "\r\n", "\n"))
 }
 
 func TestPrototypesAdderSketchWithStruct(t *testing.T) {
@@ -215,7 +292,18 @@ func TestPrototypesAdderSketchWithStruct(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
@@ -225,7 +313,7 @@ func TestPrototypesAdderSketchWithStruct(t *testing.T) {
 
 	preprocessed := LoadAndInterpolate(t, filepath.Join("SketchWithStruct", "SketchWithStruct.preprocessed.txt"), ctx)
 	preprocessedSketch := loadPreprocessedSketch(t, ctx)
-	obtained := strings.Replace(preprocessedSketch, "\r\n", "\n", -1)
+	obtained := strings.ReplaceAll(preprocessedSketch, "\r\n", "\n")
 	// ctags based preprocessing removes the space after "dostuff", but this is still OK
 	// TODO: remove this exception when moving to a more powerful parser
 	preprocessed = strings.Replace(preprocessed, "void dostuff (A_NEW_TYPE * bar);", "void dostuff(A_NEW_TYPE * bar);", 1)
@@ -247,7 +335,18 @@ func TestPrototypesAdderSketchWithConfig(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
@@ -260,7 +359,7 @@ func TestPrototypesAdderSketchWithConfig(t *testing.T) {
 	require.Contains(t, preprocessedSketch, "#line 13 "+quotedSketchLocation+"\nvoid setup();\n#line 17 "+quotedSketchLocation+"\nvoid loop();\n#line 13 "+quotedSketchLocation+"\n")
 
 	preprocessed := LoadAndInterpolate(t, filepath.Join("sketch_with_config", "sketch_with_config.preprocessed.txt"), ctx)
-	require.Equal(t, preprocessed, strings.Replace(preprocessedSketch, "\r\n", "\n", -1))
+	require.Equal(t, preprocessed, strings.ReplaceAll(preprocessedSketch, "\r\n", "\n"))
 }
 
 func TestPrototypesAdderSketchNoFunctionsTwoFiles(t *testing.T) {
@@ -277,7 +376,18 @@ func TestPrototypesAdderSketchNoFunctionsTwoFiles(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
@@ -304,7 +414,18 @@ func TestPrototypesAdderSketchNoFunctions(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
@@ -332,7 +453,18 @@ func TestPrototypesAdderSketchWithDefaultArgs(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
@@ -359,7 +491,18 @@ func TestPrototypesAdderSketchWithInlineFunction(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
@@ -374,12 +517,12 @@ func TestPrototypesAdderSketchWithInlineFunction(t *testing.T) {
 	obtained := preprocessedSketch
 	// ctags based preprocessing removes "inline" but this is still OK
 	// TODO: remove this exception when moving to a more powerful parser
-	expected = strings.Replace(expected, "static inline int8_t testInline();", "static int8_t testInline();", -1)
-	obtained = strings.Replace(obtained, "static inline int8_t testInline();", "static int8_t testInline();", -1)
+	expected = strings.ReplaceAll(expected, "static inline int8_t testInline();", "static int8_t testInline();")
+	obtained = strings.ReplaceAll(obtained, "static inline int8_t testInline();", "static int8_t testInline();")
 	// ctags based preprocessing removes "__attribute__ ....." but this is still OK
 	// TODO: remove this exception when moving to a more powerful parser
-	expected = strings.Replace(expected, "__attribute__((always_inline)) uint8_t testAttribute();", "uint8_t testAttribute();", -1)
-	obtained = strings.Replace(obtained, "__attribute__((always_inline)) uint8_t testAttribute();", "uint8_t testAttribute();", -1)
+	expected = strings.ReplaceAll(expected, "__attribute__((always_inline)) uint8_t testAttribute();", "uint8_t testAttribute();")
+	obtained = strings.ReplaceAll(obtained, "__attribute__((always_inline)) uint8_t testAttribute();", "uint8_t testAttribute();")
 	require.Contains(t, obtained, expected)
 }
 
@@ -397,7 +540,18 @@ func TestPrototypesAdderSketchWithFunctionSignatureInsideIFDEF(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
@@ -430,7 +584,18 @@ func TestPrototypesAdderSketchWithUSBCON(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
@@ -462,7 +627,18 @@ func TestPrototypesAdderSketchWithTypename(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
@@ -476,8 +652,8 @@ func TestPrototypesAdderSketchWithTypename(t *testing.T) {
 	obtained := preprocessedSketch
 	// ctags based preprocessing ignores line with typename
 	// TODO: remove this exception when moving to a more powerful parser
-	expected = strings.Replace(expected, "#line 12 "+quotedSketchLocation+"\ntypename Foo<char>::Bar func();\n", "", -1)
-	obtained = strings.Replace(obtained, "#line 12 "+quotedSketchLocation+"\ntypename Foo<char>::Bar func();\n", "", -1)
+	expected = strings.ReplaceAll(expected, "#line 12 "+quotedSketchLocation+"\ntypename Foo<char>::Bar func();\n", "")
+	obtained = strings.ReplaceAll(obtained, "#line 12 "+quotedSketchLocation+"\ntypename Foo<char>::Bar func();\n", "")
 	require.Contains(t, obtained, expected)
 }
 
@@ -495,7 +671,18 @@ func TestPrototypesAdderSketchWithIfDef2(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
@@ -508,7 +695,7 @@ func TestPrototypesAdderSketchWithIfDef2(t *testing.T) {
 	require.Contains(t, preprocessedSketch, "#line 5 "+quotedSketchLocation+"\nvoid elseBranch();\n#line 9 "+quotedSketchLocation+"\nvoid f1();\n#line 10 "+quotedSketchLocation+"\nvoid f2();\n#line 12 "+quotedSketchLocation+"\nvoid setup();\n#line 14 "+quotedSketchLocation+"\nvoid loop();\n#line 5 "+quotedSketchLocation+"\n")
 
 	expectedSource := LoadAndInterpolate(t, filepath.Join("sketch_with_ifdef", "sketch.preprocessed.txt"), ctx)
-	require.Equal(t, expectedSource, strings.Replace(preprocessedSketch, "\r\n", "\n", -1))
+	require.Equal(t, expectedSource, strings.ReplaceAll(preprocessedSketch, "\r\n", "\n"))
 }
 
 func TestPrototypesAdderSketchWithIfDef2SAM(t *testing.T) {
@@ -525,7 +712,18 @@ func TestPrototypesAdderSketchWithIfDef2SAM(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
@@ -538,7 +736,7 @@ func TestPrototypesAdderSketchWithIfDef2SAM(t *testing.T) {
 	require.Contains(t, preprocessedSketch, "#line 2 "+quotedSketchLocation+"\nvoid ifBranch();\n#line 9 "+quotedSketchLocation+"\nvoid f1();\n#line 10 "+quotedSketchLocation+"\nvoid f2();\n#line 12 "+quotedSketchLocation+"\nvoid setup();\n#line 14 "+quotedSketchLocation+"\nvoid loop();\n#line 2 "+quotedSketchLocation+"\n")
 
 	expectedSource := LoadAndInterpolate(t, filepath.Join("sketch_with_ifdef", "sketch.preprocessed.SAM.txt"), ctx)
-	require.Equal(t, expectedSource, strings.Replace(preprocessedSketch, "\r\n", "\n", -1))
+	require.Equal(t, expectedSource, strings.ReplaceAll(preprocessedSketch, "\r\n", "\n"))
 }
 
 func TestPrototypesAdderSketchWithConst(t *testing.T) {
@@ -555,7 +753,18 @@ func TestPrototypesAdderSketchWithConst(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
@@ -579,7 +788,18 @@ func TestPrototypesAdderSketchWithDosEol(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
@@ -603,7 +823,18 @@ func TestPrototypesAdderSketchWithSubstringFunctionMember(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)

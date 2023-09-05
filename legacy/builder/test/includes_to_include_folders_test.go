@@ -20,7 +20,6 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/arduino/arduino-cli/legacy/builder"
 	"github.com/arduino/arduino-cli/legacy/builder/types"
 	paths "github.com/arduino/go-paths-helper"
 	"github.com/stretchr/testify/require"
@@ -37,7 +36,18 @@ func TestIncludesToIncludeFolders(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
@@ -60,7 +70,18 @@ func TestIncludesToIncludeFoldersSketchWithIfDef(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
@@ -82,7 +103,18 @@ func TestIncludesToIncludeFoldersIRremoteLibrary(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
@@ -107,7 +139,18 @@ func TestIncludesToIncludeFoldersANewLibrary(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
@@ -137,7 +180,18 @@ func TestIncludesToIncludeFoldersDuplicateLibs(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
@@ -168,7 +222,19 @@ func TestIncludesToIncludeFoldersDuplicateLibsWithConflictingLibsOutsideOfPlatfo
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
@@ -199,7 +265,18 @@ func TestIncludesToIncludeFoldersDuplicateLibs2(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
@@ -225,7 +302,18 @@ func TestIncludesToIncludeFoldersSubfolders(t *testing.T) {
 			ctx.LineOffset, _err = ctx.Builder.PrepareSketchBuildPath(ctx.SourceOverride, ctx.SketchBuildPath)
 			return _err
 		}),
-		&builder.ContainerFindIncludes{},
+		types.BareCommand(func(ctx *types.Context) error {
+			return ctx.SketchLibrariesDetector.FindIncludes(
+				ctx.BuildPath,
+				ctx.BuildProperties.GetPath("build.core.path"),
+				ctx.BuildProperties.GetPath("build.variant.path"),
+				ctx.SketchBuildPath,
+				ctx.Sketch,
+				ctx.LibrariesBuildPath,
+				ctx.BuildProperties,
+				ctx.TargetPlatform.Platform.Architecture,
+			)
+		}),
 	}
 	for _, command := range commands {
 		err := command.Run(ctx)
