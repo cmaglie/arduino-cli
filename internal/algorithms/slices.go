@@ -41,7 +41,7 @@ func Filter[T any](values []T, matcher Matcher[T]) []T {
 // Map applies the Mapper function to each element of the slice and returns
 // a new slice with the results in the same order.
 func Map[T, U any](values []T, mapper Mapper[T, U]) []U {
-	res := []U{}
+	var res []U
 	for _, x := range values {
 		res = append(res, mapper(x))
 	}

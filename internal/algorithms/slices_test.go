@@ -50,4 +50,9 @@ func TestMap(t *testing.T) {
 	require.Equal(t, "world", parts[1])
 	require.Equal(t, "how are", parts[2])
 	require.Equal(t, "you?", parts[3])
+
+	var n []string
+	require.Nil(t, f.Map(n, strings.TrimSpace)) // nil input -> nil output
+	n = []string{}
+	require.Nil(t, f.Map(n, strings.TrimSpace)) // empty input -> nil output
 }
