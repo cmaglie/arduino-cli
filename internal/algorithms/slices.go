@@ -52,7 +52,11 @@ func Map[T, U any](values []T, mapper Mapper[T, U]) []U {
 // and returns the result.
 func Reduce[T any](values []T, reducer Reducer[T]) T {
 	var result T
-	for _, v := range values {
+	if len(values) == 0 {
+		return result
+	}
+	result = values[0]
+	for _, v := range values[1:] {
 		result = reducer(result, v)
 	}
 	return result

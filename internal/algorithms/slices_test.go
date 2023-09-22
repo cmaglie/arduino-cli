@@ -56,3 +56,16 @@ func TestMap(t *testing.T) {
 	n = []string{}
 	require.Nil(t, f.Map(n, strings.TrimSpace)) // empty input -> nil output
 }
+
+func TestReduce(t *testing.T) {
+	sum := func(x, y int) int { return x + y }
+	one := func(x, y int) int { return 1 }
+	require.Equal(t, 15, f.Reduce([]int{1, 2, 3, 4, 5}, sum))
+	require.Equal(t, 1, f.Reduce([]int{1, 2, 3, 4, 5}, one))
+	// empty set -> just return the zero value
+	require.Equal(t, 0, f.Reduce([]int{}, sum))
+	require.Equal(t, 0, f.Reduce([]int{}, one))
+	// single element -> just return the single element (do not call reduce function)
+	require.Equal(t, 10, f.Reduce([]int{10}, sum))
+	require.Equal(t, 10, f.Reduce([]int{10}, one))
+}
