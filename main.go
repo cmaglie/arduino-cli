@@ -28,6 +28,8 @@ func main() {
 	configuration.Settings = configuration.Init(configuration.FindConfigFileInArgs(os.Args))
 	i18n.Init(configuration.Settings.GetString("locale"))
 	arduinoCmd := cli.NewCommand()
+	arduinoCmd.SilenceUsage = true
+	arduinoCmd.SilenceErrors = true
 	if err := arduinoCmd.Execute(); err != nil {
 		feedback.FatalError(err, feedback.ErrGeneric)
 	}
