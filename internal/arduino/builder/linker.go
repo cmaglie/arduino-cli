@@ -45,43 +45,6 @@ func (b *Builder) link() error {
 	wrapWithDoubleQuotes := func(value string) string { return "\"" + value + "\"" }
 	objectFileList := strings.Join(f.Map(objectFiles.AsStrings(), wrapWithDoubleQuotes), " ")
 
-	// If command line length is too big (> 30000 chars), try to collect the object files into archives
-	// and use that archives to complete the build.
-	if len(objectFileList) > 30000 {
-
-		// We must create an object file for each visited directory: this is required because gcc-ar checks
-		// if an object file is already in the archive by looking ONLY at the filename WITHOUT the path, so
-		// it may happen that a subdir/spi.o inside the archive may be overwritten by a anotherdir/spi.o
-		// because thery are both named spi.o.
-
-		// Put all the existing archives apart from the other object files
-		existingArchives := objectFiles.Clone()
-		existingArchives.FilterSuffix(".a")
-		objectFiles.FilterOutSuffix(".a")
-
-		// Generate an archive for each directory from the remaining object files
-		newArchives := paths.NewPathList()
-		for _, object := range objectFiles {
-			archive := object.Parent().Join("objs.a")
-			newArchives.AddIfMissing(archive)
-		}
-		for _, archive := range newArchives {
-			archiveDir := archive.Parent()
-			relatedObjectFiles := objectFiles.Clone()
-			relatedObjectFiles.Filter(func(object *paths.Path) bool {
-				// extract all the object files that are in the same directory of the archive
-				return object.Parent().EquivalentTo(archiveDir)
-			})
-			b.archiveCompiledFiles(archive, relatedObjectFiles)
-		}
-
-		// Put everything together
-		allArchives := existingArchives.Clone()
-		allArchives.AddAll(newArchives)
-		objectFileList = strings.Join(f.Map(allArchives.AsStrings(), wrapWithDoubleQuotes), " ")
-		objectFileList = "-Wl,--whole-archive " + objectFileList + " -Wl,--no-whole-archive"
-	}
-
 	properties := b.buildProperties.Clone()
 	properties.Set("compiler.c.elf.flags", properties.Get("compiler.c.elf.flags"))
 	properties.Set("compiler.warning_flags", properties.Get("compiler.warning_flags."+b.logger.WarningsLevel()))

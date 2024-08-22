@@ -234,6 +234,13 @@ func (b *Builder) compileLibrary(library *libraries.Library, includes []string) 
 	}
 
 	if len(objectFiles) > 0 {
+
+		// TODO: We must create an object file for each visited directory: this is required because gcc-ar checks
+		// if an object file is already in the archive by looking ONLY at the filename WITHOUT the path, so
+		// it may happen that a subdir/spi.o inside the archive may be overwritten by a anotherdir/spi.o
+		// because thery are both named spi.o.
+		// This means that we may need to make multiple .a and cache all of them.
+
 		archiveFile, err := b.archiveCompiledFiles(libraryBuildPath.Join("lib.a"), objectFiles)
 		if err != nil {
 			return nil, err
