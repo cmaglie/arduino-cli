@@ -132,14 +132,14 @@ func (b *Builder) compileLibrary(library *libraries.Library, includes []string) 
 	if b.logger.Verbose() {
 		b.logger.Info(i18n.Tr(`Compiling library "%[1]s"`, library.Name))
 	}
-	libraryBuildPath := b.librariesBuildPath.Join(library.DirName)
 
+	libraryBuildPath := b.librariesBuildPath.Join(library.DirName)
 	if err := libraryBuildPath.MkdirAll(); err != nil {
 		return nil, err
 	}
 
 	objectFiles := paths.NewPathList()
-
+	archiveFiles := paths.NewPathList()
 	if library.Precompiled {
 		coreSupportPrecompiled := b.buildProperties.ContainsKey("compiler.libraries.ldflags")
 		precompiledPath := b.findExpectedPrecompiledLibFolder(
@@ -177,12 +177,12 @@ func (b *Builder) compileLibrary(library *libraries.Library, includes []string) 
 			staticLibs.FilterSuffix(".a")
 			for _, lib := range staticLibs {
 				if !strings.HasPrefix(lib.Base(), "lib") {
-					objectFiles.Add(lib)
+					archiveFiles.Add(lib)
 				}
 			}
 
 			if library.PrecompiledWithSources {
-				return objectFiles, nil
+				return archiveFiles, nil
 			}
 		}
 	}
@@ -201,7 +201,7 @@ func (b *Builder) compileLibrary(library *libraries.Library, includes []string) 
 			if err != nil {
 				return nil, err
 			}
-			objectFiles.Add(archiveFile)
+			archiveFiles.Add(archiveFile)
 		} else {
 			objectFiles.AddAll(libObjectFiles)
 		}
@@ -233,7 +233,15 @@ func (b *Builder) compileLibrary(library *libraries.Library, includes []string) 
 		}
 	}
 
-	return objectFiles, nil
+	if len(objectFiles) > 0 {
+		archiveFile, err := b.archiveCompiledFiles(libraryBuildPath.Join("lib.a"), objectFiles)
+		if err != nil {
+			return nil, err
+		}
+		archiveFiles.Add(archiveFile)
+	}
+
+	return archiveFiles, nil
 }
 
 // removeUnusedCompiledLibraries fixdoc
