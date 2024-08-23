@@ -161,13 +161,22 @@ func (b *Builder) compileLibrary(library *libraries.Library, includes []string) 
 		b.logger.Info(i18n.Tr(`Compiling library "%[1]s"`, library.Name))
 	}
 
+	// TODO: libraries with "dot_a_linkage=true" or libraries already providing a
+	// precompiled lib.a needs extra boilerplate to be handled. At the moment
+	// they are not handled correctly.
+
 	var targetArchivedLibrary *paths.Path
 	if b.librariesBuildCachePath != nil {
 		archivedLibName := getCachedLibraryArchiveDirName(
 			b.buildProperties.Get("build.fqbn"),
 			b.buildProperties.Get("compiler.optimization_flags"),
+			// TODO: Add included library set here
 			library.InstallDir,
 		)
+
+		// TODO: if a single library needs a rebuild then all libraries requires a rebuild.
+		// This means that the `canUseArchivedLib` must be checked for all libraries
+		// in advance in the `compileLibraries` method.
 
 		canUseArchivedLib := func(archivedLib *paths.Path) bool {
 			if b.onlyUpdateCompilationDatabase || b.clean {
