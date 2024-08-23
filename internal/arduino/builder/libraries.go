@@ -16,13 +16,19 @@
 package builder
 
 import (
+	"crypto/md5"
+	"encoding/hex"
+	"errors"
+	"os"
 	"slices"
 	"strings"
 	"time"
 
 	f "github.com/arduino/arduino-cli/internal/algorithms"
 	"github.com/arduino/arduino-cli/internal/arduino/builder/cpp"
+	"github.com/arduino/arduino-cli/internal/arduino/builder/internal/utils"
 	"github.com/arduino/arduino-cli/internal/arduino/libraries"
+	"github.com/arduino/arduino-cli/internal/buildcache"
 	"github.com/arduino/arduino-cli/internal/i18n"
 	"github.com/arduino/go-paths-helper"
 	"github.com/arduino/go-properties-orderedmap"
@@ -128,9 +134,71 @@ func (b *Builder) compileLibraries(libraries libraries.List, includes []string) 
 	return objectFiles, nil
 }
 
+// getCachedLibraryArchiveDirName returns the directory name to be used to store
+// the global cached lib.a.
+func getCachedLibraryArchiveDirName(fqbn string, optimizationFlags string, libFolder *paths.Path) string {
+	fqbnToUnderscore := strings.ReplaceAll(fqbn, ":", "_")
+	fqbnToUnderscore = strings.ReplaceAll(fqbnToUnderscore, "=", "_")
+	if absCoreFolder, err := libFolder.Abs(); err == nil {
+		libFolder = absCoreFolder
+	} // silently continue if absolute path can't be detected
+
+	md5Sum := func(data []byte) string {
+		md5sumBytes := md5.Sum(data)
+		return hex.EncodeToString(md5sumBytes[:])
+	}
+	hash := md5Sum([]byte(libFolder.String() + optimizationFlags))
+	realName := libFolder.Base() + "_" + fqbnToUnderscore + "_" + hash
+	if len(realName) > 100 {
+		// avoid really long names, simply hash the name again
+		realName = md5Sum([]byte(realName))
+	}
+	return realName
+}
+
 func (b *Builder) compileLibrary(library *libraries.Library, includes []string) (paths.PathList, error) {
 	if b.logger.Verbose() {
 		b.logger.Info(i18n.Tr(`Compiling library "%[1]s"`, library.Name))
+	}
+
+	var targetArchivedLibrary *paths.Path
+	if b.librariesBuildCachePath != nil {
+		archivedLibName := getCachedLibraryArchiveDirName(
+			b.buildProperties.Get("build.fqbn"),
+			b.buildProperties.Get("compiler.optimization_flags"),
+			library.InstallDir,
+		)
+
+		canUseArchivedLib := func(archivedLib *paths.Path) bool {
+			if b.onlyUpdateCompilationDatabase || b.clean {
+				return false
+			}
+			if isOlder, err := utils.DirContentIsOlderThan(library.InstallDir, archivedLib); err != nil || !isOlder {
+				// Recreate the archive if ANY of the library files has changed
+				return false
+			}
+			return true
+		}
+
+		targetArchivedLibrary = b.librariesBuildCachePath.Join(archivedLibName, "lib.a")
+		if canUseArchivedLib(targetArchivedLibrary) {
+			// Extend the build cache expiration time
+			if _, err := buildcache.New(b.librariesBuildCachePath).GetOrCreate(archivedLibName); errors.Is(err, buildcache.CreateDirErr) {
+				return nil, errors.New(i18n.Tr("creating libraries cache folder: %s", err))
+			}
+			// use archived core
+			if b.logger.Verbose() {
+				b.logger.Info(i18n.Tr("Using precompiled library: %[1]s", targetArchivedLibrary))
+			}
+			res := paths.NewPathList()
+			res.Add(targetArchivedLibrary)
+			return res, nil
+		}
+
+		// Create the build cache folder for the core
+		if _, err := buildcache.New(b.librariesBuildCachePath).GetOrCreate(archivedLibName); errors.Is(err, buildcache.CreateDirErr) {
+			return nil, errors.New(i18n.Tr("creating libraries cache folder: %s", err))
+		}
 	}
 
 	libraryBuildPath := b.librariesBuildPath.Join(library.DirName)
@@ -246,6 +314,22 @@ func (b *Builder) compileLibrary(library *libraries.Library, includes []string) 
 			return nil, err
 		}
 		archiveFiles.Add(archiveFile)
+
+		// archive lib.a
+		if targetArchivedLibrary != nil && !b.onlyUpdateCompilationDatabase {
+			err := archiveFile.CopyTo(targetArchivedLibrary)
+			if b.logger.Verbose() {
+				if err == nil {
+					b.logger.Info(i18n.Tr("Archiving built lib (caching) in: %[1]s", targetArchivedLibrary))
+				} else if os.IsNotExist(err) {
+					b.logger.Info(i18n.Tr("Unable to cache built lib, please tell %[1]s maintainers to follow %[2]s",
+						b.actualPlatform,
+						"https://arduino.github.io/arduino-cli/latest/platform-specification/#recipes-to-build-the-corea-archive-file"))
+				} else {
+					b.logger.Info(i18n.Tr("Error archiving built lib (caching) in %[1]s: %[2]s", targetArchivedLibrary, err))
+				}
+			}
+		}
 	}
 
 	return archiveFiles, nil

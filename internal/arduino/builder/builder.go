@@ -61,7 +61,8 @@ type Builder struct {
 	// Custom build properties defined by user (line by line as "key=value" pairs)
 	customBuildProperties []string
 
-	// core related
+	// cache related
+	librariesBuildCachePath  *paths.Path
 	coreBuildCachePath       *paths.Path
 	extraCoreBuildCachePaths paths.PathList
 
@@ -121,6 +122,7 @@ func NewBuilder(
 	boardBuildProperties *properties.Map,
 	buildPath *paths.Path,
 	optimizeForDebug bool,
+	librariesBuildCachePath *paths.Path,
 	coreBuildCachePath *paths.Path,
 	extraCoreBuildCachePaths paths.PathList,
 	jobs int,
@@ -212,6 +214,7 @@ func NewBuilder(
 		librariesBuildPath:            librariesBuildPath,
 		jobs:                          jobs,
 		customBuildProperties:         customBuildPropertiesArgs,
+		librariesBuildCachePath:       librariesBuildCachePath,
 		coreBuildCachePath:            coreBuildCachePath,
 		extraCoreBuildCachePaths:      extraCoreBuildCachePaths,
 		logger:                        logger,

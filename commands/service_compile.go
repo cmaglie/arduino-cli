@@ -246,6 +246,7 @@ func (s *arduinoCoreServerImpl) Compile(req *rpc.CompileRequest, stream rpc.Ardu
 		boardBuildProperties,
 		buildPath,
 		req.GetOptimizeForDebug(),
+		buildCachePath.Join("libraries"),
 		coreBuildCachePath,
 		extraCoreBuildCachePaths,
 		int(req.GetJobs()),
