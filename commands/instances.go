@@ -92,7 +92,7 @@ func (s *arduinoCoreServerImpl) Create(ctx context.Context, req *rpc.CreateReque
 	if err != nil {
 		return nil, err
 	}
-	inst, err := instances.Create(dataDir, packagesDir, userPackagesDir, downloadsDir, userAgent, config)
+	inst, err := instances.Create(dataDir, packagesDir, userPackagesDir, downloadsDir, s.settings.GetBuildCachePath(), userAgent, config)
 	if err != nil {
 		return nil, err
 	}
@@ -409,7 +409,7 @@ func (s *arduinoCoreServerImpl) Init(req *rpc.InitRequest, stream rpc.ArduinoCor
 		}
 	}
 
-	lm, libsLoadingWarnings := lmb.Build()
+	lm, libsLoadingWarnings := lmb.Build(s.settings.GetBuildCachePath())
 	_ = instances.SetLibraryManager(instance, lm) // should never fail
 	for _, status := range libsLoadingWarnings {
 		logrus.WithError(status.Err()).Warnf("Error loading library")

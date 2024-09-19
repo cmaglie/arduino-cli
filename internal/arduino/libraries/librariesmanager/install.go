@@ -65,7 +65,7 @@ func (lmi *Installer) InstallPrerequisiteCheck(name string, version *semver.Vers
 		return nil, err
 	}
 
-	lmi.RescanLibraries()
+	lmi.RescanLibraries(nil) // TODO: Is this required??
 
 	libs := lmi.FindByReference(name, nil, installLocation)
 	if len(libs) > 1 {

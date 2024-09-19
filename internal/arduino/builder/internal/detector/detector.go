@@ -605,7 +605,7 @@ func LibrariesLoader(
 	if useCachedLibrariesResolution {
 		// Since we are using the cached libraries resolution
 		// the library manager is not needed.
-		lm, _ = librariesmanager.NewBuilder().Build()
+		lm, _ = librariesmanager.NewBuilder().Build(nil)
 	}
 	if librariesManager == nil {
 		lmb := librariesmanager.NewBuilder()
@@ -653,7 +653,7 @@ func LibrariesLoader(
 			})
 		}
 
-		newLm, libsLoadingWarnings := lmb.Build()
+		newLm, libsLoadingWarnings := lmb.Build(nil)
 		for _, status := range libsLoadingWarnings {
 			// With the refactoring of the initialization step of the CLI we changed how
 			// errors are returned when loading platforms and libraries, that meant returning a list of

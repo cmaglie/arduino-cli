@@ -25,19 +25,19 @@ func TestLibrariesBuilderScanCloneRescan(t *testing.T) {
 	lmb := NewBuilder()
 	lmb.libraries["testLibA"] = libraries.List{}
 	lmb.libraries["testLibB"] = libraries.List{}
-	lm, warns := lmb.Build()
+	lm, warns := lmb.Build(nil)
 	require.Empty(t, warns)
 	require.Len(t, lm.libraries, 2)
 
 	// Cloning should keep existing libraries
-	lm2, warns2 := lm.Clone().Build()
+	lm2, warns2 := lm.Clone().Build(nil)
 	require.Empty(t, warns2)
 	require.Len(t, lm2.libraries, 2)
 
 	// Full rescan should update libs
 	{
 		lmi2, release := lm2.NewInstaller()
-		lmi2.RescanLibraries()
+		lmi2.RescanLibraries(nil)
 		release()
 	}
 	require.Len(t, lm.libraries, 2) // Ensure deep-coping worked as expected...
