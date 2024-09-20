@@ -16,15 +16,12 @@
 package librariesmanager
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
 	"slices"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/arduino/arduino-cli/internal/arduino/cores"
 	"github.com/arduino/arduino-cli/internal/arduino/libraries"
@@ -127,12 +124,12 @@ func (lm *LibrariesManager) NewInstaller() (*Installer, func()) {
 }
 
 // Build builds a new LibrariesManager.
-func (lmb *Builder) Build(cacheDir *paths.Path) (*LibrariesManager, []*status.Status) {
+func (lmb *Builder) Build() (*LibrariesManager, []*status.Status) {
 	var statuses []*status.Status
 	res := &LibrariesManager{}
 	for _, dir := range lmb.librariesDir {
 		if !dir.scanned {
-			if errs := lmb.loadLibrariesFromDir(dir, cacheDir); len(errs) > 0 {
+			if errs := lmb.loadLibrariesFromDir(dir); len(errs) > 0 {
 				statuses = append(statuses, errs...)
 			}
 		}
@@ -170,11 +167,11 @@ func (lmb *Builder) AddLibrariesDir(libDir LibrariesDir) {
 }
 
 // RescanLibraries reload all installed libraries in the system.
-func (lmi *Installer) RescanLibraries(cacheDir *paths.Path) []*status.Status {
+func (lmi *Installer) RescanLibraries() []*status.Status {
 	lmi.libraries = map[string]libraries.List{}
 	statuses := []*status.Status{}
 	for _, dir := range lmi.librariesDir {
-		if errs := lmi.loadLibrariesFromDir(dir, cacheDir); len(errs) > 0 {
+		if errs := lmi.loadLibrariesFromDir(dir); len(errs) > 0 {
 			statuses = append(statuses, errs...)
 		}
 	}
@@ -197,30 +194,15 @@ func (lm *LibrariesManager) getLibrariesDir(installLocation libraries.LibraryLoc
 	}
 }
 
-func (lm *LibrariesManager) libCacheFile(librariesDir *LibrariesDir, cacheDir *paths.Path) *paths.Path {
-	if cacheDir == nil {
-		return nil
-	}
-	hash := md5.Sum([]byte(librariesDir.Path.String()))
-	cache := cacheDir.Join("libs", "cache_"+hex.EncodeToString(hash[:]))
-	if stat, err := cache.Stat(); err != nil {
-		return cache
-	} else if time.Since(stat.ModTime()) < time.Hour*24 {
-		return cache
-	}
-	cache.Remove()
-	return cache
-}
-
 // loadLibrariesFromDir loads all libraries in the given directory. Returns
 // nil if the directory doesn't exists.
-func (lm *LibrariesManager) loadLibrariesFromDir(librariesDir *LibrariesDir, cacheDir *paths.Path) []*status.Status {
+func (lm *LibrariesManager) loadLibrariesFromDir(librariesDir *LibrariesDir) []*status.Status {
 	statuses := []*status.Status{}
 
 	librariesDir.scanned = true
 
 	var loadedLibs libraries.List
-	if cacheFilePath := lm.libCacheFile(librariesDir, cacheDir); cacheFilePath != nil && cacheFilePath.Exist() {
+	if cacheFilePath := librariesDir.Path.Join("libraries-loader-cache"); cacheFilePath.Exist() {
 		logrus.WithField("file", cacheFilePath).Info("Using library cache")
 
 		// Load lib cache
@@ -232,7 +214,6 @@ func (lm *LibrariesManager) loadLibrariesFromDir(librariesDir *LibrariesDir, cac
 		defer cache.Close()
 
 		if err := loadedLibs.UnmarshalBinary(cache); err != nil {
-			cacheFilePath.Remove()
 			s := status.Newf(codes.FailedPrecondition, "reading lib cache %[1]s: %[2]s", cacheFilePath, err)
 			return append(statuses, s)
 		}
@@ -265,20 +246,17 @@ func (lm *LibrariesManager) loadLibrariesFromDir(librariesDir *LibrariesDir, cac
 		}
 
 		// Write lib cache
-		if cacheFilePath != nil {
-			cacheFilePath.Parent().MkdirAll()
-			cache, err := cacheFilePath.Create()
-			if err != nil {
-				s := status.Newf(codes.FailedPrecondition, "creating lib cache %[1]s: %[2]s", cacheFilePath, err)
-				return append(statuses, s)
-			}
-			err = loadedLibs.MarshalBinary(cache)
-			cache.Close()
-			if err != nil {
-				cacheFilePath.Remove()
-				s := status.Newf(codes.FailedPrecondition, "writing lib cache %[1]s: %[2]s", cacheFilePath, err)
-				return append(statuses, s)
-			}
+		cache, err := cacheFilePath.Create()
+		if err != nil {
+			s := status.Newf(codes.FailedPrecondition, "creating lib cache %[1]s: %[2]s", cacheFilePath, err)
+			return append(statuses, s)
+		}
+		err = loadedLibs.MarshalBinary(cache)
+		cache.Close()
+		if err != nil {
+			cacheFilePath.Remove()
+			s := status.Newf(codes.FailedPrecondition, "writing lib cache %[1]s: %[2]s", cacheFilePath, err)
+			return append(statuses, s)
 		}
 	}
 
