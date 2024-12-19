@@ -158,7 +158,7 @@ func Create(dataDir, packagesDir, userPackagesDir, downloadsDir *paths.Path, ext
 	instancesCount++
 	instancesMux.Unlock()
 
-	return &rpc.Instance{Id: id}, nil
+	return rpc.Instance_builder{Id: &id}.Build(), nil
 }
 
 // IsValid returns true if the given instance is valid.

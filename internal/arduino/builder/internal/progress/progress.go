@@ -15,7 +15,10 @@
 
 package progress
 
-import rpc "github.com/arduino/arduino-cli/rpc/cc/arduino/cli/commands/v1"
+import (
+	rpc "github.com/arduino/arduino-cli/rpc/cc/arduino/cli/commands/v1"
+	"google.golang.org/protobuf/proto"
+)
 
 // Struct fixdoc
 type Struct struct {
@@ -58,9 +61,9 @@ func (p *Struct) CompleteStep() {
 
 func (p *Struct) pushProgress() {
 	if p.callback != nil {
-		p.callback(&rpc.TaskProgress{
-			Percent:   p.Progress,
-			Completed: p.Progress >= 100.0,
-		})
+		p.callback(rpc.TaskProgress_builder{
+			Percent:   &p.Progress,
+			Completed: proto.Bool(p.Progress >= 100.0),
+		}.Build())
 	}
 }

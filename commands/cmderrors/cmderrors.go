@@ -24,6 +24,7 @@ import (
 	"github.com/arduino/go-paths-helper"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 )
 
 func composeErrorMsg(msg string, cause error) string {
@@ -322,10 +323,10 @@ func (ife *InitFailedError) Error() string {
 func (ife *InitFailedError) GRPCStatus() *status.Status {
 	st, _ := status.
 		New(ife.Code, ife.Cause.Error()).
-		WithDetails(&rpc.FailedInstanceInitError{
-			Reason:  ife.Reason,
-			Message: ife.Cause.Error(),
-		})
+		WithDetails(rpc.FailedInstanceInitError_builder{
+			Reason:  &ife.Reason,
+			Message: proto.String(ife.Cause.Error()),
+		}.Build())
 	return st
 }
 

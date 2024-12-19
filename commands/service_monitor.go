@@ -35,6 +35,7 @@ import (
 	"github.com/djherbis/nio/v3"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/protobuf/proto"
 )
 
 type monitorPipeServer struct {
@@ -55,14 +56,14 @@ func (s *monitorPipeServer) Send(resp *rpc.MonitorResponse) error {
 
 func (s *monitorPipeServer) Recv() (r *rpc.MonitorRequest, e error) {
 	if conf := s.req.Swap(nil); conf != nil {
-		return &rpc.MonitorRequest{Message: &rpc.MonitorRequest_OpenRequest{OpenRequest: conf}}, nil
+		return rpc.MonitorRequest_builder{OpenRequest: conf}.Build(), nil
 	}
 	buff := make([]byte, 4096)
 	n, err := s.in.Read(buff)
 	if err != nil {
 		return nil, err
 	}
-	return &rpc.MonitorRequest{Message: &rpc.MonitorRequest_TxData{TxData: buff[:n]}}, nil
+	return rpc.MonitorRequest_builder{TxData: buff[:n]}.Build(), nil
 }
 
 func (s *monitorPipeServer) Context() context.Context {
@@ -162,7 +163,7 @@ func (s *arduinoCoreServerImpl) Monitor(stream rpc.ArduinoCoreService_MonitorSer
 
 	// Send a message with Success set to true to notify the caller of the port being now active
 	syncSend := NewSynchronizedSend(stream.Send)
-	_ = syncSend.Send(&rpc.MonitorResponse{Message: &rpc.MonitorResponse_Success{Success: true}})
+	_ = syncSend.Send(rpc.MonitorResponse_builder{Success: proto.Bool(true)}.Build())
 
 	ctx, cancel := context.WithCancel(stream.Context())
 	gracefulCloseInitiated := &atomic.Bool{}
@@ -177,13 +178,13 @@ func (s *arduinoCoreServerImpl) Monitor(stream rpc.ArduinoCoreService_MonitorSer
 				return
 			}
 			if err != nil {
-				syncSend.Send(&rpc.MonitorResponse{Message: &rpc.MonitorResponse_Error{Error: err.Error()}})
+				syncSend.Send(rpc.MonitorResponse_builder{Error: proto.String(err.Error())}.Build())
 				return
 			}
 			if conf := msg.GetUpdatedConfiguration(); conf != nil {
 				for _, c := range conf.GetSettings() {
 					if err := monitor.Configure(c.GetSettingId(), c.GetValue()); err != nil {
-						syncSend.Send(&rpc.MonitorResponse{Message: &rpc.MonitorResponse_Error{Error: err.Error()}})
+						syncSend.Send(rpc.MonitorResponse_builder{Error: proto.String(err.Error())}.Build())
 					}
 				}
 			}
@@ -201,7 +202,7 @@ func (s *arduinoCoreServerImpl) Monitor(stream rpc.ArduinoCoreService_MonitorSer
 					return
 				}
 				if err != nil {
-					syncSend.Send(&rpc.MonitorResponse{Message: &rpc.MonitorResponse_Error{Error: err.Error()}})
+					syncSend.Send(rpc.MonitorResponse_builder{Error: proto.String(err.Error())}.Build())
 					return
 				}
 				tx = tx[n:]
@@ -219,10 +220,10 @@ func (s *arduinoCoreServerImpl) Monitor(stream rpc.ArduinoCoreService_MonitorSer
 				break
 			}
 			if err != nil {
-				syncSend.Send(&rpc.MonitorResponse{Message: &rpc.MonitorResponse_Error{Error: err.Error()}})
+				syncSend.Send(rpc.MonitorResponse_builder{Error: proto.String(err.Error())}.Build())
 				break
 			}
-			if err := syncSend.Send(&rpc.MonitorResponse{Message: &rpc.MonitorResponse_RxData{RxData: buff[:n]}}); err != nil {
+			if err := syncSend.Send(rpc.MonitorResponse_builder{RxData: buff[:n]}.Build()); err != nil {
 				break
 			}
 		}

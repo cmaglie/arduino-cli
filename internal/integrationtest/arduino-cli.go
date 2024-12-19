@@ -35,6 +35,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/proto"
 )
 
 // FindRepositoryRootPath returns the repository root path
@@ -491,10 +492,10 @@ func (cli *ArduinoCLI) Create() *ArduinoCLIInstance {
 
 // SetValue calls the "SetValue" gRPC method.
 func (cli *ArduinoCLI) SetValue(key, jsonData string) error {
-	req := &commands.SettingsSetValueRequest{
-		Key:          key,
-		EncodedValue: jsonData,
-	}
+	req := commands.SettingsSetValueRequest_builder{
+		Key:          &key,
+		EncodedValue: &jsonData,
+	}.Build()
 	logCallf(">>> SetValue(%+v)\n", req)
 	_, err := cli.daemonClient.SettingsSetValue(context.Background(), req)
 	return err
@@ -502,11 +503,11 @@ func (cli *ArduinoCLI) SetValue(key, jsonData string) error {
 
 // Init calls the "Init" gRPC method.
 func (inst *ArduinoCLIInstance) Init(profile string, sketchPath string, respCB func(*commands.InitResponse)) error {
-	initReq := &commands.InitRequest{
+	initReq := commands.InitRequest_builder{
 		Instance:   inst.instance,
-		Profile:    profile,
-		SketchPath: sketchPath,
-	}
+		Profile:    &profile,
+		SketchPath: &sketchPath,
+	}.Build()
 	logCallf(">>> Init(%v)\n", initReq)
 	initClient, err := inst.cli.daemonClient.Init(context.Background(), initReq)
 	if err != nil {
@@ -529,10 +530,10 @@ func (inst *ArduinoCLIInstance) Init(profile string, sketchPath string, respCB f
 
 // BoardList calls the "BoardList" gRPC method.
 func (inst *ArduinoCLIInstance) BoardList(timeout time.Duration) (*commands.BoardListResponse, error) {
-	boardListReq := &commands.BoardListRequest{
+	boardListReq := commands.BoardListRequest_builder{
 		Instance: inst.instance,
-		Timeout:  timeout.Milliseconds(),
-	}
+		Timeout:  proto.Int64(timeout.Milliseconds()),
+	}.Build()
 	logCallf(">>> BoardList(%v) -> ", boardListReq)
 	resp, err := inst.cli.daemonClient.BoardList(context.Background(), boardListReq)
 	logCallf("err=%v\n", err)
@@ -541,9 +542,9 @@ func (inst *ArduinoCLIInstance) BoardList(timeout time.Duration) (*commands.Boar
 
 // BoardListWatch calls the "BoardListWatch" gRPC method.
 func (inst *ArduinoCLIInstance) BoardListWatch(ctx context.Context) (commands.ArduinoCoreService_BoardListWatchClient, error) {
-	boardListWatchReq := &commands.BoardListWatchRequest{
+	boardListWatchReq := commands.BoardListWatchRequest_builder{
 		Instance: inst.instance,
-	}
+	}.Build()
 	logCallf(">>> BoardListWatch(%v)\n", boardListWatchReq)
 	watcher, err := inst.cli.daemonClient.BoardListWatch(ctx, boardListWatchReq)
 	if err != nil {
@@ -554,39 +555,39 @@ func (inst *ArduinoCLIInstance) BoardListWatch(ctx context.Context) (commands.Ar
 
 // PlatformInstall calls the "PlatformInstall" gRPC method.
 func (inst *ArduinoCLIInstance) PlatformInstall(ctx context.Context, packager, arch, version string, skipPostInst bool) (commands.ArduinoCoreService_PlatformInstallClient, error) {
-	installCl, err := inst.cli.daemonClient.PlatformInstall(ctx, &commands.PlatformInstallRequest{
+	installCl, err := inst.cli.daemonClient.PlatformInstall(ctx, commands.PlatformInstallRequest_builder{
 		Instance:        inst.instance,
-		PlatformPackage: packager,
-		Architecture:    arch,
-		Version:         version,
-		SkipPostInstall: skipPostInst,
-	})
+		PlatformPackage: &packager,
+		Architecture:    &arch,
+		Version:         &version,
+		SkipPostInstall: &skipPostInst,
+	}.Build())
 	logCallf(">>> PlatformInstall(%v:%v %v)\n", packager, arch, version)
 	return installCl, err
 }
 
 // Compile calls the "Compile" gRPC method.
 func (inst *ArduinoCLIInstance) Compile(ctx context.Context, fqbn, sketchPath string, warnings string) (commands.ArduinoCoreService_CompileClient, error) {
-	compileCl, err := inst.cli.daemonClient.Compile(ctx, &commands.CompileRequest{
+	compileCl, err := inst.cli.daemonClient.Compile(ctx, commands.CompileRequest_builder{
 		Instance:   inst.instance,
-		Fqbn:       fqbn,
-		SketchPath: sketchPath,
-		Verbose:    true,
-		Warnings:   warnings,
-	})
+		Fqbn:       &fqbn,
+		SketchPath: &sketchPath,
+		Verbose:    proto.Bool(true),
+		Warnings:   &warnings,
+	}.Build())
 	logCallf(">>> Compile(%v %v warnings=%v)\n", fqbn, sketchPath, warnings)
 	return compileCl, err
 }
 
 // LibraryList calls the "LibraryList" gRPC method.
 func (inst *ArduinoCLIInstance) LibraryList(ctx context.Context, name, fqbn string, all, updatable bool) (*commands.LibraryListResponse, error) {
-	req := &commands.LibraryListRequest{
+	req := commands.LibraryListRequest_builder{
 		Instance:  inst.instance,
-		Name:      name,
-		Fqbn:      fqbn,
-		All:       all,
-		Updatable: updatable,
-	}
+		Name:      &name,
+		Fqbn:      &fqbn,
+		All:       &all,
+		Updatable: &updatable,
+	}.Build()
 	logCallf(">>> LibraryList(%v) -> ", req)
 	resp, err := inst.cli.daemonClient.LibraryList(ctx, req)
 	logCallf("err=%v\n", err)
@@ -601,14 +602,14 @@ func (inst *ArduinoCLIInstance) LibraryInstall(ctx context.Context, name, versio
 	if installAsBundled {
 		installLocation = commands.LibraryInstallLocation_LIBRARY_INSTALL_LOCATION_BUILTIN
 	}
-	req := &commands.LibraryInstallRequest{
+	req := commands.LibraryInstallRequest_builder{
 		Instance:        inst.instance,
-		Name:            name,
-		Version:         version,
-		NoDeps:          noDeps,
-		NoOverwrite:     noOverwrite,
-		InstallLocation: installLocation,
-	}
+		Name:            &name,
+		Version:         &version,
+		NoDeps:          &noDeps,
+		NoOverwrite:     &noOverwrite,
+		InstallLocation: &installLocation,
+	}.Build()
 	installCl, err := inst.cli.daemonClient.LibraryInstall(ctx, req)
 	logCallf(">>> LibraryInstall(%+v)\n", req)
 	return installCl, err
@@ -616,11 +617,11 @@ func (inst *ArduinoCLIInstance) LibraryInstall(ctx context.Context, name, versio
 
 // LibraryUninstall calls the "LibraryUninstall" gRPC method.
 func (inst *ArduinoCLIInstance) LibraryUninstall(ctx context.Context, name, version string) (commands.ArduinoCoreService_LibraryUninstallClient, error) {
-	req := &commands.LibraryUninstallRequest{
+	req := commands.LibraryUninstallRequest_builder{
 		Instance: inst.instance,
-		Name:     name,
-		Version:  version,
-	}
+		Name:     &name,
+		Version:  &version,
+	}.Build()
 	installCl, err := inst.cli.daemonClient.LibraryUninstall(ctx, req)
 	logCallf(">>> LibraryUninstall(%+v)\n", req)
 	return installCl, err
@@ -628,10 +629,10 @@ func (inst *ArduinoCLIInstance) LibraryUninstall(ctx context.Context, name, vers
 
 // UpdateIndex calls the "UpdateIndex" gRPC method.
 func (inst *ArduinoCLIInstance) UpdateIndex(ctx context.Context, ignoreCustomPackages bool) (commands.ArduinoCoreService_UpdateIndexClient, error) {
-	req := &commands.UpdateIndexRequest{
+	req := commands.UpdateIndexRequest_builder{
 		Instance:                   inst.instance,
-		IgnoreCustomPackageIndexes: ignoreCustomPackages,
-	}
+		IgnoreCustomPackageIndexes: &ignoreCustomPackages,
+	}.Build()
 	updCl, err := inst.cli.daemonClient.UpdateIndex(ctx, req)
 	logCallf(">>> UpdateIndex(%+v)\n", req)
 	return updCl, err
@@ -639,22 +640,22 @@ func (inst *ArduinoCLIInstance) UpdateIndex(ctx context.Context, ignoreCustomPac
 
 // PlatformUpgrade calls the "PlatformUpgrade" gRPC method.
 func (inst *ArduinoCLIInstance) PlatformUpgrade(ctx context.Context, packager, arch string, skipPostInst bool) (commands.ArduinoCoreService_PlatformUpgradeClient, error) {
-	installCl, err := inst.cli.daemonClient.PlatformUpgrade(ctx, &commands.PlatformUpgradeRequest{
+	installCl, err := inst.cli.daemonClient.PlatformUpgrade(ctx, commands.PlatformUpgradeRequest_builder{
 		Instance:        inst.instance,
-		PlatformPackage: packager,
-		Architecture:    arch,
-		SkipPostInstall: skipPostInst,
-	})
+		PlatformPackage: &packager,
+		Architecture:    &arch,
+		SkipPostInstall: &skipPostInst,
+	}.Build())
 	logCallf(">>> PlatformUpgrade(%v:%v)\n", packager, arch)
 	return installCl, err
 }
 
 // PlatformSearch calls the "PlatformSearch" gRPC method.
 func (inst *ArduinoCLIInstance) PlatformSearch(ctx context.Context, args string, all bool) (*commands.PlatformSearchResponse, error) {
-	req := &commands.PlatformSearchRequest{
+	req := commands.PlatformSearchRequest_builder{
 		Instance:   inst.instance,
-		SearchArgs: args,
-	}
+		SearchArgs: &args,
+	}.Build()
 	logCallf(">>> PlatformSearch(%+v)\n", req)
 	resp, err := inst.cli.daemonClient.PlatformSearch(ctx, req)
 	return resp, err
@@ -668,29 +669,27 @@ func (inst *ArduinoCLIInstance) Monitor(ctx context.Context, port *commands.Port
 	if err != nil {
 		return nil, err
 	}
-	err = monitorClient.Send(&commands.MonitorRequest{
-		Message: &commands.MonitorRequest_OpenRequest{
-			OpenRequest: &commands.MonitorPortOpenRequest{
-				Instance: inst.instance,
-				Port:     port,
-			},
-		},
-	})
+	err = monitorClient.Send(commands.MonitorRequest_builder{
+		OpenRequest: commands.MonitorPortOpenRequest_builder{
+			Instance: inst.instance,
+			Port:     port,
+		}.Build(),
+	}.Build())
 	return monitorClient, err
 }
 
 // Upload calls the "Upload" gRPC method.
 func (inst *ArduinoCLIInstance) Upload(ctx context.Context, fqbn, sketchPath, port, protocol string) (commands.ArduinoCoreService_UploadClient, error) {
-	uploadCl, err := inst.cli.daemonClient.Upload(ctx, &commands.UploadRequest{
+	uploadCl, err := inst.cli.daemonClient.Upload(ctx, commands.UploadRequest_builder{
 		Instance:   inst.instance,
-		Fqbn:       fqbn,
-		SketchPath: sketchPath,
-		Verbose:    true,
-		Port: &commands.Port{
-			Address:  port,
-			Protocol: protocol,
-		},
-	})
+		Fqbn:       &fqbn,
+		SketchPath: &sketchPath,
+		Verbose:    proto.Bool(true),
+		Port: commands.Port_builder{
+			Address:  &port,
+			Protocol: &protocol,
+		}.Build(),
+	}.Build())
 	logCallf(">>> Upload(%v %v port/protocol=%s/%s)\n", fqbn, sketchPath, port, protocol)
 	return uploadCl, err
 }

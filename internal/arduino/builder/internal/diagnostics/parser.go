@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	rpc "github.com/arduino/arduino-cli/rpc/cc/arduino/cli/commands/v1"
+	"google.golang.org/protobuf/proto"
 )
 
 // CompilerOutputParserCB is a callback function that is called to feed a parser
@@ -117,15 +118,15 @@ func (d *Diagnostic) ToRPC() *rpc.CompileDiagnostic {
 	if d == nil {
 		return nil
 	}
-	return &rpc.CompileDiagnostic{
-		Severity: string(d.Severity),
-		Message:  d.Message,
-		File:     d.File,
-		Line:     int64(d.Line),
-		Column:   int64(d.Column),
+	return rpc.CompileDiagnostic_builder{
+		Severity: proto.String(string(d.Severity)),
+		Message:  &d.Message,
+		File:     &d.File,
+		Line:     proto.Int64(int64(d.Line)),
+		Column:   proto.Int64(int64(d.Column)),
 		Context:  d.Context.ToRPC(),
 		Notes:    d.Suggestions.ToRPC(),
-	}
+	}.Build()
 }
 
 // ToRPC converts a Notes to a slice of rpc.CompileDiagnosticNote
@@ -142,12 +143,12 @@ func (s *Note) ToRPC() *rpc.CompileDiagnosticNote {
 	if s == nil {
 		return nil
 	}
-	return &rpc.CompileDiagnosticNote{
-		File:    s.File,
-		Line:    int64(s.Line),
-		Column:  int64(s.Column),
-		Message: s.Message,
-	}
+	return rpc.CompileDiagnosticNote_builder{
+		File:    &s.File,
+		Line:    proto.Int64(int64(s.Line)),
+		Column:  proto.Int64(int64(s.Column)),
+		Message: &s.Message,
+	}.Build()
 }
 
 // ToRPC converts a FullContext to a slice of rpc.CompileDiagnosticContext
@@ -164,10 +165,10 @@ func (d *Context) ToRPC() *rpc.CompileDiagnosticContext {
 	if d == nil {
 		return nil
 	}
-	return &rpc.CompileDiagnosticContext{
-		File:    d.File,
-		Line:    int64(d.Line),
-		Column:  int64(d.Column),
-		Message: d.Message,
-	}
+	return rpc.CompileDiagnosticContext_builder{
+		File:    &d.File,
+		Line:    proto.Int64(int64(d.Line)),
+		Column:  proto.Int64(int64(d.Column)),
+		Message: &d.Message,
+	}.Build()
 }
