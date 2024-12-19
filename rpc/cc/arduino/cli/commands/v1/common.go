@@ -29,38 +29,32 @@ type DownloadProgressCB func(curr *DownloadProgress)
 
 // Start sends a "start" DownloadProgress message to the callback function
 func (d DownloadProgressCB) Start(url, label string) {
-	d(&DownloadProgress{
-		Message: &DownloadProgress_Start{
-			Start: &DownloadProgressStart{
-				Url:   url,
-				Label: label,
-			},
-		},
-	})
+	d(DownloadProgress_builder{
+		Start: DownloadProgressStart_builder{
+			Url:   &url,
+			Label: &label,
+		}.Build(),
+	}.Build())
 }
 
 // Update sends an "update" DownloadProgress message to the callback function
 func (d DownloadProgressCB) Update(downloaded int64, totalSize int64) {
-	d(&DownloadProgress{
-		Message: &DownloadProgress_Update{
-			Update: &DownloadProgressUpdate{
-				Downloaded: downloaded,
-				TotalSize:  totalSize,
-			},
-		},
-	})
+	d(DownloadProgress_builder{
+		Update: DownloadProgressUpdate_builder{
+			Downloaded: &downloaded,
+			TotalSize:  &totalSize,
+		}.Build(),
+	}.Build())
 }
 
 // End sends an "end" DownloadProgress message to the callback function
 func (d DownloadProgressCB) End(success bool, message string) {
-	d(&DownloadProgress{
-		Message: &DownloadProgress_End{
-			End: &DownloadProgressEnd{
-				Success: success,
-				Message: message,
-			},
-		},
-	})
+	d(DownloadProgress_builder{
+		End: DownloadProgressEnd_builder{
+			Success: &success,
+			Message: &message,
+		}.Build(),
+	}.Build())
 }
 
 // TaskProgressCB is a callback to receive progress messages
@@ -108,14 +102,14 @@ func DiscoveryPortToRPC(p *discovery.Port) *Port {
 	if props == nil {
 		props = properties.NewMap()
 	}
-	return &Port{
-		Address:       p.Address,
-		Label:         p.AddressLabel,
-		Protocol:      p.Protocol,
-		ProtocolLabel: p.ProtocolLabel,
-		HardwareId:    p.HardwareID,
+	return Port_builder{
+		Address:       &p.Address,
+		Label:         &p.AddressLabel,
+		Protocol:      &p.Protocol,
+		ProtocolLabel: &p.ProtocolLabel,
+		HardwareId:    &p.HardwareID,
 		Properties:    props.AsMap(),
-	}
+	}.Build()
 }
 
 // DiscoveryPortFromRPCPort converts an *rpc.Port into a *discovery.Port

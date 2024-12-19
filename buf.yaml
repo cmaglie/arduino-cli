@@ -1,6 +1,8 @@
 version: v2
 deps:
   - buf.build/googleapis/googleapis:e7f8d366f5264595bcc4cd4139af9973
+  - buf.build/protocolbuffers/gofeatures:v1.36.0
+  - buf.build/protocolbuffers/wellknowntypes
 breaking:
   use:
     - FILE

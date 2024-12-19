@@ -14,13 +14,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-syntax = "proto3";
+edition = "2023";
 
 package cc.arduino.cli.commands.v1;
 
 import "cc/arduino/cli/commands/v1/common.proto";
 import "cc/arduino/cli/commands/v1/lib.proto";
+import "google/protobuf/go_features.proto";
 
+option features.(pb.go).api_level = API_OPAQUE;
 option go_package = "github.com/arduino/arduino-cli/rpc/cc/arduino/cli/commands/v1;commands";
 
 message CompileRequest {
@@ -76,7 +78,8 @@ message CompileRequest {
   map<string, string> source_override = 22;
   // When set to `true` the compiled binary will be copied to the export
   // directory.
-  optional bool export_binaries = 23;
+  /*optional*/
+  bool export_binaries = 23;
   // A list of paths to single libraries root directory.
   repeated string library = 24;
   // The path where to search for the custom signing key name and the encrypt

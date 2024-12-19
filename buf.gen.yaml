@@ -1,7 +1,7 @@
 version: v2
 plugins:
   # Use protoc-gen-go
-  - remote: buf.build/protocolbuffers/go:v1.34.2
+  - remote: buf.build/protocolbuffers/go:v1.36.0
     out: ./rpc
     opt:
       - paths=source_relative

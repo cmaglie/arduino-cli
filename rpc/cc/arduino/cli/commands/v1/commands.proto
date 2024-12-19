@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-syntax = "proto3";
+edition = "2023";
 
 package cc.arduino.cli.commands.v1;
 
@@ -27,8 +27,10 @@ import "cc/arduino/cli/commands/v1/lib.proto";
 import "cc/arduino/cli/commands/v1/monitor.proto";
 import "cc/arduino/cli/commands/v1/settings.proto";
 import "cc/arduino/cli/commands/v1/upload.proto";
+import "google/protobuf/go_features.proto";
 import "google/rpc/status.proto";
 
+option features.(pb.go).api_level = API_OPAQUE;
 option go_package = "github.com/arduino/arduino-cli/rpc/cc/arduino/cli/commands/v1;commands";
 
 // The main Arduino Platform service API.
