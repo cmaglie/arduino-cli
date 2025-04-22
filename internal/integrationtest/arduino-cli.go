@@ -131,7 +131,7 @@ func CreateEnvForDaemon(t *testing.T) (*Environment, *ArduinoCLI) {
 		UseSharedStagingFolder: true,
 	})
 
-	_ = cli.StartDaemon(false)
+	require.Equal(t, "127.0.0.1:50051", cli.StartDaemon(false))
 	return env, cli
 }
 

@@ -16,6 +16,7 @@
 package monitor_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -60,6 +61,7 @@ func TestMonitorGRPCClose(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 		mon, err := grpcInst.Monitor(ctx, ports[0].GetPort())
 		var tmpFile *paths.Path
+		fullRx := bytes.NewBuffer(nil)
 		for {
 			monResp, err := mon.Recv()
 			if err != nil {
@@ -68,9 +70,11 @@ func TestMonitorGRPCClose(t *testing.T) {
 			}
 			fmt.Printf("MON> %v\n", monResp)
 			if rx := monResp.GetRxData(); rx != nil {
-				if matches := tmpFileMatcher.FindAllStringSubmatch(string(rx), -1); len(matches) > 0 {
+				fullRx.Write(rx)
+				if matches := tmpFileMatcher.FindAllStringSubmatch(fullRx.String(), -1); len(matches) > 0 {
 					fmt.Println("Found tmpFile", matches[0][1])
 					tmpFile = paths.New(matches[0][1])
+					fullRx.Reset()
 				}
 			}
 		}
@@ -87,6 +91,7 @@ func TestMonitorGRPCClose(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 		mon, err := grpcInst.Monitor(ctx, ports[0].GetPort())
 		var tmpFile *paths.Path
+		fullRx := bytes.NewBuffer(nil)
 		for {
 			monResp, err := mon.Recv()
 			if errors.Is(err, io.EOF) {
@@ -97,13 +102,16 @@ func TestMonitorGRPCClose(t *testing.T) {
 			require.NoError(t, err)
 			fmt.Printf("MON> %v\n", monResp)
 			if rx := monResp.GetRxData(); rx != nil {
-				if matches := tmpFileMatcher.FindAllStringSubmatch(string(rx), -1); len(matches) > 0 {
+				fullRx.Write(rx)
+				if matches := tmpFileMatcher.FindAllStringSubmatch(fullRx.String(), -1); len(matches) > 0 {
 					fmt.Println("Found tmpFile", matches[0][1])
 					tmpFile = paths.New(matches[0][1])
+					fullRx.Reset()
 					go func() {
 						time.Sleep(time.Second)
 						fmt.Println("<MON Sent close command")
-						mon.Send(&commands.MonitorRequest{Message: &commands.MonitorRequest_Close{Close: true}})
+						err := mon.Send(&commands.MonitorRequest{Message: &commands.MonitorRequest_Close{Close: true}})
+						require.NoError(t, err)
 					}()
 				}
 			}
