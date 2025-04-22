@@ -549,7 +549,7 @@ func (inst *ArduinoCLIInstance) BoardList(timeout time.Duration) (*commands.Boar
 	}
 	logCallf(">>> BoardList(%v) -> ", boardListReq)
 	resp, err := inst.cli.daemonClient.BoardList(context.Background(), boardListReq)
-	logCallf("err=%v\n", err)
+	logCallf("err=%v warnings=%v\n", err, strings.Join(resp.GetWarnings(), " / "))
 	return resp, err
 }
 
