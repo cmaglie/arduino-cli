@@ -16,78 +16,52 @@
 package sketch
 
 import (
-	"errors"
-	"fmt"
-	"strings"
-
-	"github.com/arduino/arduino-cli/internal/i18n"
 	"github.com/arduino/go-paths-helper"
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
+	"github.com/goccy/go-yaml/parser"
+	"go.bug.st/f"
 )
 
 // updateOrAddYamlRootEntry updates or adds a new entry to the root of the yaml file.
 // If the value is empty the entry is removed.
-func updateOrAddYamlRootEntry(path *paths.Path, key, newValue string) error {
-	var srcYaml []string
-	if path.Exist() {
-		src, err := path.ReadFileAsLines()
-		if err != nil {
-			return err
-		}
-		lastLine := len(src) - 1
-		if lastLine > 0 && src[lastLine] == "" {
-			srcYaml = src[:lastLine]
-		} else {
-			srcYaml = src
-		}
-	}
-
-	// Generate the new yaml key/value pair
-	v, err := yaml.Marshal(newValue)
+func updateOrAddYamlRootEntry(srcPath *paths.Path, key, newValue string) error {
+	// First encode the new value as YAML and parse it to an AST
+	newValueYaml, err := yaml.Marshal(map[string]string{key: newValue})
 	if err != nil {
 		return err
 	}
-	updatedLine := key + ": " + strings.TrimSpace(string(v))
+	newValueAst := f.Must(parser.ParseBytes(newValueYaml, parser.ParseComments))
 
-	// Update or add the key/value pair into the original yaml
-	addMissing := (newValue != "")
-	for i, line := range srcYaml {
-		if strings.HasPrefix(line, key+": ") {
-			if newValue == "" {
-				// Remove the key/value pair
-				srcYaml = append(srcYaml[:i], srcYaml[i+1:]...)
-			} else {
-				// Update the key/value pair
-				srcYaml[i] = updatedLine
-			}
-			addMissing = false
-			break
-		}
-	}
-	if addMissing {
-		lastLine := len(srcYaml) - 1
-		if lastLine >= 0 && srcYaml[lastLine] == "" {
-			srcYaml[lastLine] = updatedLine
-		} else {
-			srcYaml = append(srcYaml, updatedLine)
-		}
+	// If the src file does not exist, we can just write the new value
+	if !srcPath.Exist() {
+		return srcPath.WriteFile(newValueYaml)
 	}
 
-	// Validate the new yaml
-	dstYaml := []byte(strings.Join(srcYaml, fmt.Sprintln()) + fmt.Sprintln())
-	var dst interface{}
-	if err := yaml.Unmarshal(dstYaml, &dst); err != nil {
-		return fmt.Errorf("%s: %w", i18n.Tr("could not update sketch project file"), err)
+	// Read the source YAML file and parse it to an AST
+	srcYaml, err := srcPath.ReadFile()
+	if err != nil {
+		return err
 	}
-	dstMap, ok := dst.(map[string]interface{})
-	if !ok {
-		return errors.New(i18n.Tr("could not update sketch project file"))
+	srcAst, err := parser.ParseBytes(srcYaml, parser.ParseComments)
+	if err != nil {
+		return err
 	}
-	writtenValue, notRemoved := dstMap[key]
-	if (newValue == "" && notRemoved) || (newValue != "" && newValue != writtenValue) {
-		return errors.New(i18n.Tr("could not update sketch project file"))
+
+	// Perform the merge operation
+	keyYmlPath, err := yaml.PathString("$")
+	if err != nil {
+		return err
+	}
+	if n, _ := keyYmlPath.FilterFile(srcAst); n == nil {
+		// In this case the file is empty, we can just write the new value at the bottom
+		srcYaml = append(srcYaml, '\n')
+		srcYaml = append(srcYaml, newValueYaml...)
+		return srcPath.WriteFile(srcYaml)
+	}
+	if err := keyYmlPath.MergeFromFile(srcAst, newValueAst); err != nil {
+		return err
 	}
 
 	// Write back the updated YAML
-	return path.WriteFile(dstYaml)
+	return srcPath.WriteFile([]byte(srcAst.String()))
 }

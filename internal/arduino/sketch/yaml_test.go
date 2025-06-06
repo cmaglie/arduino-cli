@@ -25,7 +25,7 @@ import (
 )
 
 func TestYamlUpdate(t *testing.T) {
-	{
+	t.Run("UpdateComplexYamlFile/1", func(t *testing.T) {
 		sample, err := paths.New("testdata", "SketchWithProfiles", "sketch.yml").ReadFile()
 		require.NoError(t, err)
 		tmp, err := paths.WriteToTempFile(sample, nil, "")
@@ -43,8 +43,8 @@ func TestYamlUpdate(t *testing.T) {
 		expected += fmt.Sprintln("default_fqbn: arduino:avr:uno")
 		expected += fmt.Sprintln("default_port: /dev/ttyACM0")
 		require.Equal(t, expected, string(updated))
-	}
-	{
+	})
+	t.Run("UpdateComplexYamlFile/2", func(t *testing.T) {
 		sample, err := paths.New("testdata", "SketchWithDefaultFQBNAndPort", "sketch.yml").ReadFile()
 		require.NoError(t, err)
 		tmp, err := paths.WriteToTempFile(sample, nil, "")
@@ -62,8 +62,19 @@ func TestYamlUpdate(t *testing.T) {
 		expected := strings.Replace(string(sample), "arduino:avr:uno", "TEST1", 1)
 		expected = strings.Replace(expected, "/dev/ttyACM0", "TEST2", 1)
 		require.Equal(t, expected, string(updated))
-	}
-	{
+	})
+	t.Run("UpdateAnEmptyYamlFile", func(t *testing.T) {
+		tmp, err := paths.WriteToTempFile([]byte("\n\n"), nil, "")
+		require.NoError(t, err)
+		err = updateOrAddYamlRootEntry(tmp, "default_fqbn", "TEST1")
+		require.NoError(t, err)
+
+		updated, err := tmp.ReadFile()
+		require.NoError(t, err)
+		expected := "\n\n\ndefault_fqbn: TEST1\n"
+		require.Equal(t, expected, string(updated))
+	})
+	t.Run("UpdateAMissingYamlFile", func(t *testing.T) {
 		tmp, err := paths.WriteToTempFile([]byte{}, nil, "")
 		require.NoError(t, err)
 		require.NoError(t, tmp.Remove())
@@ -74,5 +85,11 @@ func TestYamlUpdate(t *testing.T) {
 		require.NoError(t, err)
 		expected := "default_fqbn: TEST1\n"
 		require.Equal(t, expected, string(updated))
-	}
+	})
+	t.Run("UpdateAYamlFileWithADifferentStructure", func(t *testing.T) {
+		tmp, err := paths.WriteToTempFile([]byte("- 123\n"), nil, "")
+		require.NoError(t, err)
+		err = updateOrAddYamlRootEntry(tmp, "default_fqbn", "TEST1")
+		require.Error(t, err)
+	})
 }

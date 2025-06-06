@@ -1,3 +1,4 @@
+# all the profiles
 profiles:
   nanorp:
     fqbn: arduino:mbed_nano:nanorp2040connect

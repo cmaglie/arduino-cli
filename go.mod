@@ -21,6 +21,7 @@ require (
 	github.com/djherbis/nio/v3 v3.0.1
 	github.com/fatih/color v1.18.0
 	github.com/go-git/go-git/v5 v5.16.0
+	github.com/goccy/go-yaml v1.18.0
 	github.com/gofrs/uuid/v5 v5.3.2
 	github.com/leonelquinteros/gotext v1.7.1
 	github.com/mailru/easyjson v0.7.7
