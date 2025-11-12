@@ -114,7 +114,7 @@ jobs:
           mv coverage_integration.txt coverage_integration_${{ matrix.operating-system }}_${{ matrix.tests }}.txt
 
       - name: Upload coverage data to workflow artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           if-no-files-found: error
           name: ${{ env.COVERAGE_ARTIFACT }}-test-integration-${{ matrix.operating-system }}-${{ matrix.tests }}
@@ -157,7 +157,7 @@ jobs:
 
       - name: Upload coverage data to workflow artifact
         if: runner.os == 'Linux'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           if-no-files-found: error
           name: ${{ env.COVERAGE_ARTIFACT }}-test-${{ matrix.operating-system }}
@@ -182,7 +182,7 @@ jobs:
         run: go install github.com/wadey/gocovmerge@b5bfa59
 
       - name: Download coverage data artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           pattern: ${{ env.COVERAGE_ARTIFACT }}-*
           merge-multiple: true
@@ -203,6 +203,13 @@ jobs:
             CODECOV_TOKEN=""
           fi
           echo "CODECOV_TOKEN=$CODECOV_TOKEN" >> "$GITHUB_ENV"
+
+      # There is a bug in the codecov uploader that makes it fail when there are broken symlinks in the repository.
+      # We must keep this workaround until the bug is fixed: https://github.com/codecov/codecov-action/issues/1890
+      - name: Workaround for codecov uploader bug
+        run: |
+          rm internal/integrationtest/compile_4/testdata/ValidSketchWithNonInoBrokenSketchFileSymlink/other_file.c
+          touch internal/integrationtest/compile_4/testdata/ValidSketchWithNonInoBrokenSketchFileSymlink/other_file.c
 
       - name: Send unit tests coverage to Codecov
         uses: codecov/codecov-action@v5
