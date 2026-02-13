@@ -44,8 +44,7 @@ func (b *Builder) link() error {
 	// If command line length is too big (> 30000 chars), try to collect the object files into archives
 	// and use that archives to complete the build.
 	if len(objectFileList) > 30000 {
-
-		// We must create an object file for each visited directory: this is required because gcc-ar checks
+		// We must create an archive file for each visited directory: this is required because gcc-ar checks
 		// if an object file is already in the archive by looking ONLY at the filename WITHOUT the path, so
 		// it may happen that a subdir/spi.o inside the archive may be overwritten by a anotherdir/spi.o
 		// because thery are both named spi.o.
