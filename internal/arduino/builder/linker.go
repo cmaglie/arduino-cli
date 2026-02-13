@@ -38,11 +38,6 @@ func (b *Builder) link() error {
 	objectFiles.AddAll(b.buildArtifacts.librariesObjectFiles)
 	objectFiles.AddAll(b.buildArtifacts.coreObjectsFiles)
 
-	coreDotARelPath, err := b.buildPath.RelTo(b.buildArtifacts.coreArchiveFilePath)
-	if err != nil {
-		return err
-	}
-
 	wrapWithDoubleQuotes := func(value string) string { return "\"" + value + "\"" }
 	objectFileList := strings.Join(f.Map(objectFiles.AsStrings(), wrapWithDoubleQuotes), " ")
 
@@ -86,7 +81,11 @@ func (b *Builder) link() error {
 	properties := b.buildProperties.Clone()
 	properties.Set("compiler.c.elf.flags", properties.Get("compiler.c.elf.flags"))
 	properties.Set("compiler.warning_flags", properties.Get("compiler.warning_flags."+b.logger.WarningsLevel()))
-	properties.Set("archive_file", coreDotARelPath.String())
+	if coreDotARelPath, err := b.buildPath.RelTo(b.buildArtifacts.coreArchiveFilePath); err != nil {
+		return err
+	} else {
+		properties.Set("archive_file", coreDotARelPath.String())
+	}
 	properties.Set("archive_file_path", b.buildArtifacts.coreArchiveFilePath.String())
 	properties.Set("object_files", objectFileList)
 
