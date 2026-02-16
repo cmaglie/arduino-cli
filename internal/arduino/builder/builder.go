@@ -111,6 +111,9 @@ type buildArtifacts struct {
 
 	// populated by BuildSketch
 	sketchObjectFiles paths.PathList
+
+	// populated by link
+	linkerFiles paths.PathList
 }
 
 // NewBuilder creates a sketch Builder.

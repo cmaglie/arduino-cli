@@ -16,11 +16,14 @@
 package builder
 
 import (
+	"encoding/json"
 	"strings"
+	"time"
 
 	"github.com/arduino/arduino-cli/internal/arduino/builder/logger"
 	"github.com/arduino/arduino-cli/internal/i18n"
 	"github.com/arduino/go-paths-helper"
+	"github.com/sirupsen/logrus"
 	"go.bug.st/f"
 )
 
@@ -77,6 +80,44 @@ func (b *Builder) link() error {
 		objectFileList = "-Wl,--whole-archive " + objectFileList + " -Wl,--no-whole-archive"
 	}
 
+	// Use link cache to speed up build if available.
+	linkCacheFile := b.buildPath.Join("link.cache")
+	if d, err := linkCacheFile.ReadFile(); err == nil {
+		if err := json.Unmarshal(d, &b.buildArtifacts.linkerFiles); err != nil {
+			logrus.Debugf("Could not unmarshal link cache file: %s", err)
+		}
+		var newestDepTS time.Time
+		for _, object := range objectFiles {
+			stat, err := object.Stat()
+			if err != nil {
+				logrus.Debugf("Could not stat object file %s: %s", object, err)
+				continue
+			}
+			if stat.ModTime().After(newestDepTS) {
+				newestDepTS = stat.ModTime()
+			}
+		}
+		canReuseArtefacts := true
+		for _, linkerFile := range b.buildArtifacts.linkerFiles {
+			stat, err := linkerFile.Stat()
+			if err != nil {
+				logrus.Debugf("Could not stat linker file %s: %s", linkerFile, err)
+				continue
+			}
+			if stat.ModTime().Before(newestDepTS) {
+				canReuseArtefacts = false
+				break
+			}
+		}
+		if canReuseArtefacts {
+			if b.logger.VerbosityLevel() == logger.VerbosityVerbose {
+				b.logger.Info(i18n.Tr("Linking skipped, executable files are up-to-date."))
+			}
+			return nil
+		}
+	}
+
+	linkStartedTS := time.Now()
 	properties := b.buildProperties.Clone()
 	properties.Set("compiler.c.elf.flags", properties.Get("compiler.c.elf.flags"))
 	properties.Set("compiler.warning_flags", properties.Get("compiler.warning_flags."+b.logger.WarningsLevel()))
@@ -87,6 +128,25 @@ func (b *Builder) link() error {
 	}
 	properties.Set("archive_file_path", b.buildArtifacts.coreArchiveFilePath.String())
 	properties.Set("object_files", objectFileList)
+	if err := b.RunRecipeWithProps("recipe.c.combine", ".pattern", properties, false); err != nil {
+		return err
+	}
 
-	return b.RunRecipeWithProps("recipe.c.combine", ".pattern", properties, false)
+	if b.buildArtifacts.linkerFiles == nil {
+		// If linker files cache is not available, read the build directory to find the generated executable files.
+		linkOutputFiles, err := b.buildPath.ReadDirRecursiveFiltered(nil, func(f *paths.Path) bool {
+			stat, err := f.Stat()
+			return err == nil && stat.ModTime().After(linkStartedTS)
+		})
+		if err != nil {
+			return err
+		}
+
+		b.buildArtifacts.linkerFiles = linkOutputFiles
+		if err := linkCacheFile.WriteFile(f.Must(json.Marshal(linkOutputFiles))); err != nil {
+			logrus.Debugf("Could not write link cache file: %s", err)
+		}
+	}
+
+	return nil
 }
