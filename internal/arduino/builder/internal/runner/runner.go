@@ -63,6 +63,13 @@ func New(inCtx context.Context, workers int) *Runner {
 		})
 	}
 
+	go func() {
+		r.wg.Wait()
+		close(queue)
+		for task := range queue {
+			task.accept(nil)
+		}
+	}()
 	return r
 }
 

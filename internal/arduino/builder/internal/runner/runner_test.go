@@ -51,3 +51,22 @@ func TestRunMultipleTask(t *testing.T) {
 	r.Cancel()
 	fmt.Println("Runner completed")
 }
+
+func TestTaskCancelOverrun(t *testing.T) {
+	for i := range 10 {
+		t.Run(fmt.Sprintf("Run%d", i), func(t *testing.T) {
+			r := runner.New(context.Background(), 1) // only 1 worker to ensure tasks are executed sequentially
+			r.Enqueue(runner.NewTask("sleep", "1"))
+			r.Enqueue(runner.NewTask("sleep", "2"))
+
+			// wait a bit so the first task is likely to be started
+			time.Sleep(100 * time.Millisecond)
+
+			// cancel immediately, only the first task should be able to run
+			r.Cancel()
+
+			require.NotNil(t, r.Results(runner.NewTask("sleep", "1")), "Task 1 should have run")
+			require.Nil(t, r.Results(runner.NewTask("sleep", "2")), "Task 2 should not have run")
+		})
+	}
+}
