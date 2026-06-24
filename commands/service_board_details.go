@@ -20,9 +20,11 @@ import (
 
 	"github.com/arduino/arduino-cli/commands/cmderrors"
 	"github.com/arduino/arduino-cli/commands/internal/instances"
+	"github.com/arduino/arduino-cli/internal/arduino/cores"
 	"github.com/arduino/arduino-cli/internal/arduino/utils"
 	"github.com/arduino/arduino-cli/pkg/fqbn"
 	rpc "github.com/arduino/arduino-cli/rpc/cc/arduino/cli/commands/v1"
+	"go.bug.st/f"
 )
 
 // BoardDetails returns all details for a board including tools and HW identifiers.
@@ -113,23 +115,11 @@ func (s *arduinoCoreServerImpl) BoardDetails(ctx context.Context, req *rpc.Board
 	details.ToolsDependencies = []*rpc.ToolsDependencies{}
 	for _, tool := range boardPlatformRelease.ToolDependencies {
 		toolRelease := pme.FindToolDependency(tool)
-		var systems []*rpc.Systems
-		if toolRelease != nil {
-			for _, f := range toolRelease.Flavors {
-				systems = append(systems, &rpc.Systems{
-					Checksum:        f.Resource.Checksum,
-					Size:            f.Resource.Size,
-					Host:            f.OS,
-					ArchiveFilename: f.Resource.ArchiveFileName,
-					Url:             f.Resource.URL,
-				})
-			}
-		}
 		details.ToolsDependencies = append(details.GetToolsDependencies(), &rpc.ToolsDependencies{
 			Name:     tool.ToolName,
 			Packager: tool.ToolPackager,
 			Version:  tool.ToolVersion.String(),
-			Systems:  systems,
+			Systems:  f.Map(toolRelease.Flavors, (*cores.Flavor).ToRpcSystem),
 		})
 	}
 
