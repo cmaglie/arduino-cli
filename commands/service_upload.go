@@ -482,12 +482,11 @@ func (s *arduinoCoreServerImpl) runProgramAction(ctx context.Context, pme *packa
 	// In order to trigger the forced serial-port-wait the following conditions must be met:
 	// - No upload port specified (protocol == "default")
 	// - "upload.wait_for_upload_port" == true (developers requested the touch + port wait)
-	// - "upload.tool.serial" not defained, or
+	// - "upload.tool.serial" not defined, or
 	//   "upload.tool.serial" is the same as "upload.tool.default"
 	forcedSerialPortWait := port.Protocol == "default" && // this is the value when no port is specified
 		uploadProperties.GetBoolean("upload.wait_for_upload_port") &&
-		(!uploadProperties.ContainsKey("upload.tool.serial") ||
-			uploadProperties.Get("upload.tool.serial") == uploadProperties.Get("upload.tool.default"))
+		(!uploadProperties.ContainsKey("upload.tool.serial") || uploadProperties.Get("upload.tool.serial") == uploadProperties.Get("upload.tool.default"))
 
 	// If not using programmer perform some action required
 	// to set the board in bootloader mode
