@@ -68,19 +68,19 @@ func (s *arduinoCoreServerImpl) SupportedUserFields(ctx context.Context, req *rp
 		return nil, &cmderrors.UnknownFQBNError{Cause: err}
 	}
 
-	toolID, err := getToolID(boardProperties, "upload", req.GetProtocol())
+	toolRecipeID, err := getToolRecipeID(boardProperties, "upload", req.GetProtocol())
 	if err != nil {
 		return nil, err
 	}
 
 	return &rpc.SupportedUserFieldsResponse{
-		UserFields: getUserFields(toolID, platformRelease),
+		UserFields: getUserFields(toolRecipeID, platformRelease),
 	}, nil
 }
 
-// getToolID returns the ID of the tool that supports the action and protocol combination by searching in props.
-// Returns error if tool cannot be found.
-func getToolID(props *properties.Map, action, protocol string) (string, error) {
+// getToolRecipeID returns the ID of the tool recipies that supports the action and protocol
+// combination by searching in props. Returns error if a tool recipe cannot be found.
+func getToolRecipeID(props *properties.Map, action, protocol string) (string, error) {
 	toolProperty := fmt.Sprintf("%s.tool.%s", action, protocol)
 	defaultToolProperty := fmt.Sprintf("%s.tool.default", action)
 
@@ -332,7 +332,7 @@ func (s *arduinoCoreServerImpl) runProgramAction(ctx context.Context, pme *packa
 	} else if programmer != nil {
 		action = "program"
 	}
-	uploadToolID, err := getToolID(props, action, port.Protocol)
+	uploadToolID, err := getToolRecipeID(props, action, port.Protocol)
 	if err != nil {
 		return nil, err
 	}
