@@ -115,11 +115,15 @@ func (s *arduinoCoreServerImpl) BoardDetails(ctx context.Context, req *rpc.Board
 	details.ToolsDependencies = []*rpc.ToolsDependencies{}
 	for _, tool := range boardPlatformRelease.ToolDependencies {
 		toolRelease := pme.FindToolDependency(tool)
+		var systems []*rpc.Systems
+		if toolRelease != nil {
+			systems = f.Map(toolRelease.Flavors, (*cores.Flavor).ToRpcSystem)
+		}
 		details.ToolsDependencies = append(details.GetToolsDependencies(), &rpc.ToolsDependencies{
 			Name:     tool.ToolName,
 			Packager: tool.ToolPackager,
 			Version:  tool.ToolVersion.String(),
-			Systems:  f.Map(toolRelease.Flavors, (*cores.Flavor).ToRpcSystem),
+			Systems:  systems,
 		})
 	}
 
